@@ -1,0 +1,205 @@
+:root {
+  --bg: #f6f4ee;
+  --panel: #ffffff;
+  --text: #3b3640;
+--accent: #7aa5c4;
+  --accent-dark: #5a8cb0;
+  --border: #e3ded3;
+  --chip: #efeafb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+header {
+  background: linear-gradient(135deg, #a98ce0, #7aa5c4);
+  color: #fff;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+header .sub {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.panel,
+.results-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field input[type="number"] {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+  width: 140px;
+}
+
+.ng-field {
+  margin-top: 16px;
+}
+
+.ng-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ng-list label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.link-btn {
+  margin-top: 8px;
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--accent-dark);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.8rem;
+  padding: 0;
+}
+
+.actions {
+  margin-top: 16px;
+}
+
+.primary-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 28px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.primary-btn:hover {
+  filter: brightness(1.05);
+}
+
+.count {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.result-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+
+.result-card .dishes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.dish {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.dish .cat {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.dish .name {
+  font-weight: 600;
+}
+
+.dish .ratio {
+  background: var(--chip);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.ings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ing-chip {
+  background: var(--chip);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.85rem;
+}
+
+.empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 30px 0;
+}
+
+.loading {
+  color: var(--muted);
+  text-align: center;
+  padding: 30px 0;
+}
