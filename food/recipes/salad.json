@@ -17,6 +17,7 @@
           "count": 15
         }
       ],
+      "initialEnergy": 8169,
       "ratio": 1.25
     },
     {
@@ -35,6 +36,7 @@
           "count": 8
         }
       ],
+      "initialEnergy": 5859,
       "ratio": 1.25
     },
     {
@@ -49,6 +51,7 @@
           "count": 6
         }
       ],
+      "initialEnergy": 1898,
       "ratio": 1.11
     },
     {
@@ -71,6 +74,7 @@
           "count": 6
         }
       ],
+      "initialEnergy": 5040,
       "ratio": 1.25
     },
     {
@@ -85,6 +89,7 @@
           "count": 9
         }
       ],
+      "initialEnergy": 3113,
       "ratio": 1.25
     },
     {
@@ -107,6 +112,7 @@
           "count": 3
         }
       ],
+      "initialEnergy": 3046,
       "ratio": 1.17
     },
     {
@@ -117,6 +123,7 @@
           "count": 8
         }
       ],
+      "initialEnergy": 978,
       "ratio": 1.06
     },
     {
@@ -127,6 +134,7 @@
           "count": 8
         }
       ],
+      "initialEnergy": 1045,
       "ratio": 1.06
     },
     {
@@ -145,6 +153,7 @@
           "count": 5
         }
       ],
+      "initialEnergy": 2942,
       "ratio": 1.17
     },
     {
@@ -159,6 +168,7 @@
           "count": 9
         }
       ],
+      "initialEnergy": 3665,
       "ratio": 1.17
     },
     {
@@ -177,6 +187,7 @@
           "count": 8
         }
       ],
+      "initialEnergy": 5225,
       "ratio": 1.25
     },
     {
@@ -187,6 +198,7 @@
           "count": 8
         }
       ],
+      "initialEnergy": 855,
       "ratio": 1.06
     },
     {
@@ -201,6 +213,7 @@
           "count": 5
         }
       ],
+      "initialEnergy": 2845,
       "ratio": 1.11
     },
     {
@@ -219,6 +232,7 @@
           "count": 3
         }
       ],
+      "initialEnergy": 2655,
       "ratio": 1.17
     },
     {
@@ -241,6 +255,7 @@
           "count": 11
         }
       ],
+      "initialEnergy": 11659,
       "ratio": 1.48
     },
     {
@@ -255,6 +270,7 @@
           "count": 6
         }
       ],
+      "initialEnergy": 2114,
       "ratio": 1.11
     },
     {
@@ -277,6 +293,7 @@
           "count": 9
         }
       ],
+      "initialEnergy": 11393,
       "ratio": 1.48
     },
     {
@@ -295,6 +312,7 @@
           "count": 12
         }
       ],
+      "initialEnergy": 7675,
       "ratio": 1.48
     },
     {
@@ -309,6 +327,7 @@
           "count": 8
         }
       ],
+      "initialEnergy": 2785,
       "ratio": 1.25
     },
     {
@@ -331,6 +350,7 @@
           "count": 10
         }
       ],
+      "initialEnergy": 8755,
       "ratio": 1.35
     },
     {
@@ -353,6 +373,7 @@
           "count": 22
         }
       ],
+      "initialEnergy": 20218,
       "ratio": 1.61
     },
     {
@@ -375,6 +396,7 @@
           "count": 12
         }
       ],
+      "initialEnergy": 11811,
       "ratio": 1.47
     },
     {
@@ -397,6 +419,7 @@
           "count": 18
         }
       ],
+      "initialEnergy": 19293,
       "ratio": 1.78
     },
     {
@@ -415,6 +438,7 @@
           "count": 10
         }
       ],
+      "initialEnergy": 7125,
       "ratio": 1.35
     },
     {
@@ -437,6 +461,7 @@
           "count": 22
         }
       ],
+      "initialEnergy": 25162,
       "ratio": 1.78
     },
     {
@@ -459,6 +484,7 @@
           "count": 27
         }
       ],
+      "initialEnergy": 25356,
       "ratio": 1.61
     }
   ]

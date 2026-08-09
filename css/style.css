@@ -79,8 +79,31 @@ main {
   width: 140px;
 }
 
-.ng-field {
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
   margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ng-field,
+.hl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ng-field label,
+.hl-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .ng-list {
@@ -172,6 +195,15 @@ main {
   font-weight: 700;
 }
 
+.dish .energy {
+  background: #e8f1ee;
+  color: #2f7a5f;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .meta {
   font-size: 0.85rem;
   color: var(--muted);
@@ -190,6 +222,13 @@ main {
   border-radius: 6px;
   padding: 3px 10px;
   font-size: 0.85rem;
+}
+
+.ing-chip.hl {
+  background: #ffec8a;
+  color: #7a5c00;
+  border: 1px solid #e0b400;
+  font-weight: 700;
 }
 
 .empty {
