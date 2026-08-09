@@ -166,8 +166,8 @@ main {
 
 .result-card .dishes {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  flex-direction: column;
+  gap: 4px;
   margin-bottom: 8px;
 }
 

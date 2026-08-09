@@ -140,11 +140,11 @@
     return set;
   }
 
-  function totalQuantities(dishes) {
+  function maxQuantities(dishes) {
     const counts = {};
     for (const dish of dishes) {
       for (const ing of dish.ingredients) {
-        counts[ing.name] = (counts[ing.name] || 0) + ing.count;
+        counts[ing.name] = Math.max(counts[ing.name] || 0, ing.count);
       }
     }
     return counts;
@@ -175,7 +175,7 @@
             dishes,
             union,
             unionSize: union.size,
-            quantities: totalQuantities(dishes.map((d) => d.recipe))
+            quantities: maxQuantities(dishes.map((d) => d.recipe))
           });
         }
       }
