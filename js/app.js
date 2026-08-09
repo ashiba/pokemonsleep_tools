@@ -43,6 +43,8 @@
   const els = {
     maxTypes: $("max-types"),
     minRatio: $("min-ratio"),
+    minEnergy: $("min-energy"),
+    filterEnergy: $("filter-energy"),
     ngList: $("ng-list"),
     ngClear: $("ng-clear"),
     hlList: $("hl-list"),
@@ -152,7 +154,9 @@
 
   function search() {
     const maxTypes = parseInt(els.maxTypes.value, 10) || Infinity;
-    const minRatio = parseFloat(els.minRatio.value) || 0;
+    const useEnergy = els.filterEnergy.checked;
+    const minRatio = useEnergy ? 0 : parseFloat(els.minRatio.value) || 0;
+    const minEnergy = useEnergy ? parseInt(els.minEnergy.value, 10) || 0 : 0;
 
     const candidates = [];
     for (const key of Object.keys(state.categories)) {
@@ -170,7 +174,11 @@
           }
           const union = unionOf(dishes.map((d) => d.recipe));
           if (union.size > maxTypes) continue;
-          if (dishes.some(({ recipe }) => recipe.ratio < minRatio)) continue;
+          if (useEnergy) {
+            if (dishes.some(({ recipe }) => recipe.initialEnergy < minEnergy)) continue;
+          } else if (dishes.some(({ recipe }) => recipe.ratio < minRatio)) {
+            continue;
+          }
           hits.push({
             dishes,
             union,
@@ -240,6 +248,12 @@
   }
 
   els.search.addEventListener("click", search);
+
+els.filterEnergy.addEventListener("change", () => {
+  const useEnergy = els.filterEnergy.checked;
+  els.minRatio.disabled = useEnergy;
+  els.minEnergy.disabled = !useEnergy;
+});
 
   loadData().catch((err) => {
     els.results.innerHTML = '<div class="loading">データの読み込みに失敗しました: ' + err.message + "</div>";

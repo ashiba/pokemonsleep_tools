@@ -79,6 +79,23 @@ main {
   width: 140px;
 }
 
+.field input[type="number"]:disabled {
+  background: #f0efea;
+  color: #aaa;
+}
+
+.field .toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text);
+  padding-top: 22px;
+  white-space: nowrap;
+}
+
 .fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
