@@ -10,8 +10,28 @@
   const state = {
     ingredients: [],
     categories: {},
-    ngSet: new Set()
+    ngSet: new Set(),
+    hlSet: new Set()
   };
+
+  const LS_KEY = "pokemon-sleep-hl-v1";
+
+  function loadHl() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+      if (Array.isArray(arr)) state.hlSet = new Set(arr);
+    } catch (e) {
+      state.hlSet = new Set();
+    }
+  }
+
+  function saveHl() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify([...state.hlSet]));
+    } catch (e) {
+      // ignore (private mode etc.)
+    }
+  }
 
   const $ = (id) => document.getElementById(id);
   const el = (tag, className, text) => {
@@ -25,6 +45,8 @@
     minRatio: $("min-ratio"),
     ngList: $("ng-list"),
     ngClear: $("ng-clear"),
+    hlList: $("hl-list"),
+    hlClear: $("hl-clear"),
     search: $("search"),
     count: $("result-count"),
     results: $("results")
@@ -44,7 +66,9 @@
         recipes: lists[i].recipes
       };
     });
+    loadHl();
     renderNgList();
+    renderHlList();
     els.search.disabled = false;
   }
 
@@ -73,6 +97,35 @@
     els.ngList
       .querySelectorAll('input[type="checkbox"]')
       .forEach((cb) => (cb.checked = false));
+  });
+
+  function renderHlList() {
+    const frag = document.createDocumentFragment();
+    for (const name of state.ingredients) {
+      const label = document.createElement("label");
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.dataset.name = name;
+      check.checked = state.hlSet.has(name);
+      check.addEventListener("change", () => {
+        if (check.checked) state.hlSet.add(name);
+        else state.hlSet.delete(name);
+        saveHl();
+      });
+      label.appendChild(check);
+      label.appendChild(document.createTextNode(name));
+      frag.appendChild(label);
+    }
+    els.hlList.innerHTML = "";
+    els.hlList.appendChild(frag);
+  }
+
+  els.hlClear.addEventListener("click", () => {
+    state.hlSet.clear();
+    els.hlList
+      .querySelectorAll('input[type="checkbox"]')
+      .forEach((cb) => (cb.checked = false));
+    saveHl();
   });
 
   function ingredientsOf(recipe) {
@@ -160,7 +213,10 @@
         const ratio = document.createElement("span");
         ratio.className = "ratio";
         ratio.textContent = recipe.ratio.toFixed(2);
-        dish.append(cat, name, ratio);
+        const energy = document.createElement("span");
+        energy.className = "energy";
+        energy.textContent = "エナジー " + recipe.initialEnergy.toLocaleString();
+        dish.append(cat, name, ratio, energy);
         dishes.appendChild(dish);
       }
 
@@ -172,7 +228,7 @@
       ings.className = "ings";
       for (const [name, qty] of Object.entries(hit.quantities).sort()) {
         const chip = document.createElement("span");
-        chip.className = "ing-chip";
+        chip.className = state.hlSet.has(name) ? "ing-chip hl" : "ing-chip";
         chip.textContent = name + " ×" + qty;
         ings.appendChild(chip);
       }

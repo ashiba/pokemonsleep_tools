@@ -9,6 +9,7 @@
           "count": 7
         }
       ],
+      "initialEnergy": 748,
       "ratio": 1.06
     },
     {
@@ -23,6 +24,7 @@
           "count": 25
         }
       ],
+      "initialEnergy": 7483,
       "ratio": 1.25
     },
     {
@@ -37,6 +39,7 @@
           "count": 5
         }
       ],
+      "initialEnergy": 2078,
       "ratio": 1.11
     },
     {
@@ -59,6 +62,7 @@
           "count": 10
         }
       ],
+      "initialEnergy": 9010,
       "ratio": 1.35
     },
     {
@@ -77,6 +81,7 @@
           "count": 8
         }
       ],
+      "initialEnergy": 5900,
       "ratio": 1.25
     },
     {
@@ -91,6 +96,7 @@
           "count": 9
         }
       ],
+      "initialEnergy": 4162,
       "ratio": 1.17
     },
     {
@@ -113,6 +119,7 @@
           "count": 4
         }
       ],
+      "initialEnergy": 4523,
       "ratio": 1.25
     },
     {
@@ -127,6 +134,7 @@
           "count": 8
         }
       ],
+      "initialEnergy": 1910,
       "ratio": 1.11
     },
     {
@@ -145,6 +153,7 @@
           "count": 4
         }
       ],
+      "initialEnergy": 3181,
       "ratio": 1.17
     },
     {
@@ -155,6 +164,7 @@
           "count": 7
         }
       ],
+      "initialEnergy": 814,
       "ratio": 1.06
     },
     {
@@ -165,6 +175,7 @@
           "count": 7
         }
       ],
+      "initialEnergy": 856,
       "ratio": 1.06
     },
     {
@@ -175,6 +186,7 @@
           "count": 7
         }
       ],
+      "initialEnergy": 839,
       "ratio": 1.06
     },
     {
@@ -197,6 +209,7 @@
           "count": 5
         }
       ],
+      "initialEnergy": 9445,
       "ratio": 1.48
     },
     {
@@ -211,6 +224,7 @@
           "count": 5
         }
       ],
+      "initialEnergy": 1942,
       "ratio": 1.11
     },
     {
@@ -225,6 +239,7 @@
           "count": 6
         }
       ],
+      "initialEnergy": 2150,
       "ratio": 1.11
     },
     {
@@ -247,6 +262,7 @@
           "count": 4
         }
       ],
+      "initialEnergy": 3372,
       "ratio": 1.17
     },
     {
@@ -265,6 +281,7 @@
           "count": 8
         }
       ],
+      "initialEnergy": 4670,
       "ratio": 1.25
     },
     {
@@ -287,6 +304,7 @@
           "count": 12
         }
       ],
+      "initialEnergy": 13690,
       "ratio": 1.48
     },
     {
@@ -305,6 +323,7 @@
           "count": 11
         }
       ],
+      "initialEnergy": 5702,
       "ratio": 1.35
     },
     {
@@ -327,6 +346,7 @@
           "count": 16
         }
       ],
+      "initialEnergy": 19061,
       "ratio": 1.61
     },
     {
@@ -349,6 +369,7 @@
           "count": 22
         }
       ],
+      "initialEnergy": 20655,
       "ratio": 1.61
     },
     {
@@ -371,6 +392,7 @@
           "count": 25
         }
       ],
+      "initialEnergy": 15621,
       "ratio": 1.48
     },
     {
@@ -393,6 +415,7 @@
           "count": 32
         }
       ],
+      "initialEnergy": 24802,
       "ratio": 1.78
     }
   ]
