@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ポケモンスリープ レシピ食材チェッカー</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <a href="index.html">トップ</a>
+  </nav>
+  <header>
+    <h1>レシピ食材チェッカー</h1>
+    <p class="sub">所持している食材(個数)を指定し、どのレシピが作れるかを確認します</p>
+  </header>
+
+  <main>
+    <section class="panel" aria-label="入力">
+      <div class="mode-switch">
+        <label>
+          <input type="radio" name="mode" id="mode-check" value="check" checked>
+          食材のみ指定
+        </label>
+        <label>
+          <input type="radio" name="mode" id="mode-count" value="count">
+          食材と個数を入力
+        </label>
+      </div>
+
+      <div class="pane" id="check-pane">
+        <div class="pane-label">所持している食材をチェック (複数選択可)</div>
+        <div class="ing-checks" id="ing-checks"></div>
+        <button type="button" id="clear-check" class="link-btn">チェックをリセット</button>
+      </div>
+
+      <div class="pane" id="count-pane" hidden>
+        <div class="pane-label">食材ごとの所持数を入力 (0 = 所持なし)</div>
+        <div class="ing-counts" id="ing-counts"></div>
+        <button type="button" id="clear-count" class="link-btn">入力をリセット</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>レシピ一覧</h2>
+      <div id="recipes"></div>
+    </section>
+  </main>
+
+  <script src="js/recipes.js"></script>
+</body>
+</html>
