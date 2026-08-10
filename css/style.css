@@ -375,8 +375,18 @@ main {
   font-size: 0.9rem;
 }
 
+#recipes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
 .cat-section {
-  margin-bottom: 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  background: #fbfaf8;
 }
 
 .cat-section .cat-name {
@@ -393,19 +403,13 @@ main {
 }
 
 .cat-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-@media (max-width: 800px) {
-  .cat-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 560px) {
-  .cat-list {
+@media (max-width: 900px) {
+  #recipes {
     grid-template-columns: 1fr;
   }
 }
