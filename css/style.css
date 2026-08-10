@@ -382,6 +382,46 @@ main {
   align-items: start;
 }
 
+.cat-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cat-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cat-filter .st {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.cat-filter.on {
+  border-color: var(--accent-dark);
+  background: var(--accent);
+  color: #fff;
+}
+
+.cat-filter.on .st {
+  color: #fff;
+}
+
+.cat-filter.off {
+  opacity: 0.6;
+}
+
 .cat-section {
   border: 1px solid var(--border);
   border-radius: 10px;

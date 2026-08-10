@@ -35,7 +35,9 @@
     ingredients: [],
     categories: {},
     catCountEl: {},
-    catTotal: {}
+    catTotal: {},
+    catVisible: {},
+    catSectionEl: {}
   };
 
   const $ = (id) => document.getElementById(id);
@@ -55,6 +57,7 @@
     counts: $("ing-counts"),
     clearCheck: $("clear-check"),
     clearCount: $("clear-count"),
+    catFilters: $("cat-filters"),
     recipes: $("recipes")
   };
 
@@ -72,8 +75,32 @@
       };
     });
     buildInputs();
+    buildCatFilters();
     renderAll();
     apply();
+  }
+
+  function buildCatFilters() {
+    for (const key of Object.keys(state.categories)) {
+      state.catVisible[key] = true;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cat-filter on";
+      btn.dataset.key = key;
+      btn.appendChild(document.createTextNode(state.categories[key].label + " "));
+      const st = el("span", "st", "ON");
+      btn.appendChild(st);
+      btn.addEventListener("click", () => toggleCat(key, btn, st));
+      els.catFilters.appendChild(btn);
+    }
+  }
+
+  function toggleCat(key, btn, st) {
+    const visible = !state.catVisible[key];
+    state.catVisible[key] = visible;
+    btn.classList.toggle("on", visible);
+    st.textContent = visible ? "ON" : "OFF";
+    state.catSectionEl[key].style.display = visible ? "" : "none";
   }
 
   function buildInputs() {
@@ -111,6 +138,7 @@
     const frag = document.createDocumentFragment();
     for (const key of Object.keys(state.categories)) {
       const section = el("section", "cat-section");
+      state.catSectionEl[key] = section;
       const h2 = el("h2", "cat-name", state.categories[key].label);
       const countEl = el("span", "cat-count");
       h2.appendChild(countEl);
