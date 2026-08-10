@@ -385,10 +385,29 @@ main {
   color: var(--accent-dark);
 }
 
+.cat-name .cat-count {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-left: 8px;
+}
+
 .cat-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+@media (max-width: 800px) {
+  .cat-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .cat-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .recipe-card {

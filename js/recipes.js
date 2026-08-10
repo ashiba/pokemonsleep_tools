@@ -9,7 +9,9 @@
 
   const state = {
     ingredients: [],
-    categories: {}
+    categories: {},
+    catCountEl: {},
+    catTotal: {}
   };
 
   const $ = (id) => document.getElementById(id);
@@ -84,7 +86,12 @@
     const frag = document.createDocumentFragment();
     for (const key of Object.keys(state.categories)) {
       const section = el("section", "cat-section");
-      section.appendChild(el("h2", "cat-name", state.categories[key].label));
+      const h2 = el("h2", "cat-name", state.categories[key].label);
+      const countEl = el("span", "cat-count");
+      h2.appendChild(countEl);
+      section.appendChild(h2);
+      state.catCountEl[key] = countEl;
+      state.catTotal[key] = state.categories[key].recipes.length;
       const list = el("div", "cat-list");
       state.categories[key].recipes.forEach((recipe, idx) => {
         const card = document.createElement("div");
@@ -142,6 +149,7 @@
 
     for (const key of Object.keys(state.categories)) {
       const recipes = state.categories[key].recipes;
+      let n = 0;
       els.recipes.querySelectorAll('.recipe-card[data-cat="' + key + '"]').forEach((card) => {
         const recipe = recipes[+card.dataset.ridx];
         if (!hasInput) {
@@ -152,6 +160,7 @@
         if (useCount) {
           let all = recipe.ingredients.every((ing) => (owned[ing.name] || 0) >= ing.count);
           card.classList.toggle("creatable", all);
+          if (all) n++;
           card.querySelectorAll(".ing-chip").forEach((chip) => {
             const ing = recipe.ingredients.find((i) => i.name === chip.dataset.name);
             const ok = (owned[ing.name] || 0) >= ing.count;
@@ -164,6 +173,7 @@
             if (!selected.has(ing.name)) all = false;
           }
           card.classList.toggle("creatable", all);
+          if (all) n++;
           card.querySelectorAll(".ing-chip").forEach((chip) => {
             const ok = selected.has(chip.dataset.name);
             chip.classList.toggle("ok", ok);
@@ -171,6 +181,7 @@
           });
         }
       });
+      state.catCountEl[key].textContent = n + "/" + state.catTotal[key];
     }
   }
 
