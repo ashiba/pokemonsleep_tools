@@ -507,14 +507,23 @@ main {
 }
 
 .recipe-card .dish {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 4px 8px;
   margin-bottom: 6px;
 }
 
-.recipe-card .name {
+.recipe-card .dish .name {
   font-weight: 600;
+}
+
+.recipe-card .dish-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .recipe-card .ings {
