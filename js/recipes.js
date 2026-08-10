@@ -7,6 +7,30 @@
     { key: "salad" }
   ];
 
+  const ABBR = {
+    "ふといながねぎ": "ながねぎ",
+    "あじわいキノコ": "キノコ",
+    "とくせんエッグ": "エッグ",
+    "ほっこりポテト": "ポテト",
+    "とくせんリンゴ": "リンゴ",
+    "げきからハーブ": "ハーブ",
+    "マメミート": "ミート",
+    "モーモーミルク": "ミルク",
+    "あまいミツ": "ミツ",
+    "ピュアなオイル": "オイル",
+    "あったかジンジャー": "ジンジャー",
+    "あんみんトマト": "トマト",
+    "リラックスカカオ": "カカオ",
+    "おいしいシッポ": "シッポ",
+    "ワカクサ大豆": "大豆",
+    "ワカクサコーン": "コーン",
+    "めざましコーヒー": "コーヒー",
+    "ずっしりカボチャ": "カボチャ",
+    "つやつやアボカド": "アボカド"
+  };
+
+  const abbr = (name) => ABBR[name] || name;
+
   const state = {
     ingredients: [],
     categories: {},
@@ -61,7 +85,7 @@
       check.dataset.name = name;
       check.addEventListener("change", apply);
       label.appendChild(check);
-      label.appendChild(document.createTextNode(name));
+      label.appendChild(document.createTextNode(abbr(name)));
       checkFrag.appendChild(label);
     }
     els.checks.appendChild(checkFrag);
@@ -76,7 +100,7 @@
       input.value = "0";
       input.dataset.name = name;
       input.addEventListener("input", apply);
-      label.appendChild(document.createTextNode(name));
+      label.appendChild(document.createTextNode(abbr(name)));
       label.appendChild(input);
       countFrag.appendChild(label);
     }
@@ -103,12 +127,12 @@
         const dish = el("div", "dish");
         dish.appendChild(el("span", "name", recipe.name));
         dish.appendChild(el("span", "ratio", recipe.ratio.toFixed(2)));
-        dish.appendChild(el("span", "energy", "エナジー " + recipe.initialEnergy.toLocaleString()));
+        dish.appendChild(el("span", "energy", "E: " + recipe.initialEnergy.toLocaleString()));
         card.appendChild(dish);
 
         const ings = el("div", "ings");
         for (const ing of recipe.ingredients) {
-          const chip = el("span", "ing-chip", ing.name + " ×" + ing.count);
+          const chip = el("span", "ing-chip", abbr(ing.name) + " ×" + ing.count);
           chip.dataset.name = ing.name;
           ings.appendChild(chip);
         }
