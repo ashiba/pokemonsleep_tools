@@ -392,20 +392,22 @@ main {
 .cat-filter {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 9px 22px;
+  padding: 8px 16px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fff;
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .cat-filter .st {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--muted);
 }
 
@@ -429,6 +431,25 @@ main {
 
 .cat-filter.off:hover {
   filter: brightness(0.97);
+}
+
+@media (max-width: 560px) {
+  .cat-filters {
+    gap: 6px;
+  }
+
+  .cat-filters .cat-filter {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 7px 4px;
+    font-size: 0.78rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cat-filters .cat-filter .st {
+    display: none;
+  }
 }
 
 .cat-section {
