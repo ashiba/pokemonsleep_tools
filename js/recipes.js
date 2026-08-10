@@ -41,9 +41,10 @@
     ]);
     state.ingredients = ingredients;
     CATEGORIES.forEach((c, i) => {
+      const recipes = lists[i].recipes.slice().sort((a, b) => b.ratio - a.ratio);
       state.categories[c.key] = {
         label: lists[i].category,
-        recipes: lists[i].recipes
+        recipes: recipes
       };
     });
     buildInputs();
