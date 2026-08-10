@@ -154,6 +154,7 @@
 
         const dish = el("div", "dish");
         dish.appendChild(el("span", "name", recipe.name));
+        dish.appendChild(el("span", "total", "" + recipe.ingredients.reduce((s, ing) => s + ing.count, 0)));
         dish.appendChild(el("span", "ratio", recipe.ratio.toFixed(2)));
         dish.appendChild(el("span", "energy", "E: " + recipe.initialEnergy.toLocaleString()));
         card.appendChild(dish);
