@@ -392,34 +392,43 @@ main {
 .cat-filter {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 14px;
+  gap: 6px;
+  padding: 9px 22px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 8px;
   background: #fff;
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .cat-filter .st {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 
+.cat-filter:hover {
+  border-color: var(--accent);
+}
+
 .cat-filter.on {
-  border-color: var(--accent-dark);
   background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
+}
+
+.cat-filter.on:hover {
+  filter: brightness(1.05);
 }
 
 .cat-filter.on .st {
-  color: #fff;
+  color: #f0f6fa;
 }
 
-.cat-filter.off {
-  opacity: 0.6;
+.cat-filter.off:hover {
+  filter: brightness(0.97);
 }
 
 .cat-section {
