@@ -417,6 +417,52 @@
       ],
       "initialEnergy": 24802,
       "ratio": 1.78
+    },
+    {
+      "name": "とびはねるカレーうどん",
+      "ingredients": [
+        {
+          "name": "マメミート",
+          "count": 20
+        },
+        {
+          "name": "げきからハーブ",
+          "count": 22
+        },
+        {
+          "name": "あったかジンジャー",
+          "count": 39
+        },
+        {
+          "name": "あじわいキノコ",
+          "count": 31
+        }
+      ],
+      "initialEnergy": 25539,
+      "ratio": 1.78
+    },
+    {
+      "name": "ワカクサカレーパン",
+      "ingredients": [
+        {
+          "name": "ワカクサ大豆",
+          "count": 8
+        },
+        {
+          "name": "ピュアなオイル",
+          "count": 15
+        },
+        {
+          "name": "げきからハーブ",
+          "count": 20
+        },
+        {
+          "name": "あったかジンジャー",
+          "count": 20
+        }
+      ],
+      "initialEnergy": 10945,
+      "ratio": 1.48
     }
   ]
 }
