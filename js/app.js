@@ -42,6 +42,7 @@
   };
   const els = {
     maxTypes: $("max-types"),
+    maxPot: $("max-pot"),
     minRatio: $("min-ratio"),
     minEnergy: $("min-energy"),
     filterEnergy: $("filter-energy"),
@@ -152,8 +153,14 @@
     return counts;
   }
 
+  function totalCount(recipe) {
+    return recipe.ingredients.reduce((s, ing) => s + ing.count, 0);
+  }
+
   function search() {
     const maxTypes = parseInt(els.maxTypes.value, 10) || Infinity;
+    const maxPotRaw = els.maxPot ? els.maxPot.value.trim() : "";
+    const maxPot = maxPotRaw === "" ? Infinity : parseInt(maxPotRaw, 10) || Infinity;
     const useEnergy = els.filterEnergy.checked;
     const minRatio = useEnergy ? 0 : parseFloat(els.minRatio.value) || 0;
     const minEnergy = useEnergy ? parseInt(els.minEnergy.value, 10) || 0 : 0;
@@ -172,6 +179,9 @@
           if (dishes.some(({ recipe }) => recipe.ingredients.some((i) => state.ngSet.has(i.name)))) {
             continue;
           }
+          if (Number.isFinite(maxPot) && maxPot !== Infinity) {
+            if (dishes.some(({ recipe }) => totalCount(recipe) > maxPot)) continue;
+          }
           const union = unionOf(dishes.map((d) => d.recipe));
           if (union.size > maxTypes) continue;
           if (useEnergy) {
@@ -179,17 +189,22 @@
           } else if (dishes.some(({ recipe }) => recipe.ratio < minRatio)) {
             continue;
           }
+          const minEnergyInHit = Math.min(...dishes.map((d) => d.recipe.initialEnergy));
           hits.push({
             dishes,
             union,
             unionSize: union.size,
-            quantities: maxQuantities(dishes.map((d) => d.recipe))
+            quantities: maxQuantities(dishes.map((d) => d.recipe)),
+            minEnergy: minEnergyInHit
           });
         }
       }
     }
 
-    hits.sort((a, b) => a.unionSize - b.unionSize || a.dishes.length - b.dishes.length);
+    hits.sort((a, b) => {
+      if (a.unionSize !== b.unionSize) return a.unionSize - b.unionSize;
+      return b.minEnergy - a.minEnergy;
+    });
     render(hits);
   }
 
@@ -218,13 +233,16 @@
         const name = document.createElement("span");
         name.className = "name";
         name.textContent = recipe.name;
+        const total = document.createElement("span");
+        total.className = "total";
+        total.textContent = "計" + totalCount(recipe) + "個";
         const ratio = document.createElement("span");
         ratio.className = "ratio";
         ratio.textContent = recipe.ratio.toFixed(2);
         const energy = document.createElement("span");
         energy.className = "energy";
         energy.textContent = "エナジー " + recipe.initialEnergy.toLocaleString();
-        dish.append(cat, name, ratio, energy);
+        dish.append(cat, name, total, ratio, energy);
         dishes.appendChild(dish);
       }
 
