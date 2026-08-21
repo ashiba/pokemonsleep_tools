@@ -36,6 +36,8 @@
 
       <div class="pane" id="count-pane" hidden>
         <div class="pane-label">食材ごとの所持数を入力 (0 = 所持なし)</div>
+        <button type="button" id="ocr-btn" class="ocr-btn">📷 スクショから自動入力</button>
+        <p class="ocr-help">食材バッグのスクショ（19食材が全て見える状態）を読み取り、個数を一括入力します。画像は外部に送信されません。</p>
         <div class="ing-counts" id="ing-counts"></div>
         <button type="button" id="clear-count" class="link-btn">入力をリセット</button>
       </div>
@@ -48,6 +50,39 @@
     </section>
   </main>
 
+  <div id="ocr-modal" class="ocr-modal" hidden aria-hidden="true">
+    <div class="ocr-modal-backdrop" id="ocr-backdrop"></div>
+    <div class="ocr-modal-panel" role="dialog" aria-modal="true" aria-labelledby="ocr-modal-title">
+      <div class="ocr-modal-head">
+        <h2 id="ocr-modal-title">スクショから自動入力</h2>
+        <button type="button" id="ocr-close" class="ocr-close" aria-label="閉じる">×</button>
+      </div>
+      <div class="ocr-modal-body">
+        <label class="ocr-drop" id="ocr-drop">
+          <div class="ocr-drop-icon">📸</div>
+          <div class="ocr-drop-title">タップ/クリック または ドラッグ＆ドロップ</div>
+          <div class="ocr-drop-hint">PNG / JPG 1枚 / 貼り付け (Ctrl+V) もOK</div>
+          <input type="file" id="ocr-file" accept="image/*" hidden>
+        </label>
+        <div class="ocr-preview" id="ocr-preview" hidden>
+          <img id="ocr-thumb" alt="選択した画像のプレビュー">
+          <span id="ocr-filename"></span>
+        </div>
+        <div class="ocr-progress" id="ocr-progress" hidden>
+          <div class="ocr-progress-bar"><div id="ocr-bar"></div></div>
+          <div class="ocr-status" id="ocr-status">待機中</div>
+        </div>
+        <p class="ocr-warn" id="ocr-warn" hidden></p>
+      </div>
+      <div class="ocr-modal-foot">
+        <button type="button" id="ocr-run" class="primary-btn" disabled>OCR実行</button>
+        <button type="button" id="ocr-cancel" class="cat-filter">キャンセル</button>
+      </div>
+      <p class="ocr-note">完全ブラウザ内処理。画像はサーバーに送信されません。初回は辞書（約15MB）のダウンロードで数秒かかります。</p>
+    </div>
+  </div>
+
+  <script src="js/ocr-ingredient.js"></script>
   <script src="js/recipes.js"></script>
 </body>
 </html>
