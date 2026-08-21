@@ -235,7 +235,7 @@
         name.textContent = recipe.name;
         const total = document.createElement("span");
         total.className = "total";
-        total.textContent = "計" + totalCount(recipe) + "個";
+        total.textContent = String(totalCount(recipe));
         const ratio = document.createElement("span");
         ratio.className = "ratio";
         ratio.textContent = recipe.ratio.toFixed(2);
