@@ -58,7 +58,22 @@
     clearCheck: $("clear-check"),
     clearCount: $("clear-count"),
     catFilters: $("cat-filters"),
-    recipes: $("recipes")
+    recipes: $("recipes"),
+    ocrBtn: $("ocr-btn"),
+    ocrModal: $("ocr-modal"),
+    ocrBackdrop: $("ocr-backdrop"),
+    ocrClose: $("ocr-close"),
+    ocrCancel: $("ocr-cancel"),
+    ocrDrop: $("ocr-drop"),
+    ocrFile: $("ocr-file"),
+    ocrRun: $("ocr-run"),
+    ocrBar: $("ocr-bar"),
+    ocrStatus: $("ocr-status"),
+    ocrProgress: $("ocr-progress"),
+    ocrWarn: $("ocr-warn"),
+    ocrPreview: $("ocr-preview"),
+    ocrThumb: $("ocr-thumb"),
+    ocrFilename: $("ocr-filename")
   };
 
   async function loadData() {
@@ -264,6 +279,179 @@
     els.counts.querySelectorAll("input").forEach((inp) => (inp.value = "0"));
     apply();
   });
+
+  // OCR: 数量一括入力
+  function setCountsFromOCR(counts) {
+    const inputs = els.counts.querySelectorAll("input");
+    for (let i = 0; i < inputs.length && i < counts.length; i++) {
+      const v = counts[i];
+      inputs[i].value = String(Number.isFinite(v) ? v : 0);
+    }
+    apply();
+  }
+
+  // OCRモーダル制御
+  (function initOCR() {
+    if (!els.ocrBtn || !els.ocrModal) return;
+    let selectedFile = null;
+
+    function openModal() {
+      els.ocrModal.hidden = false;
+      els.ocrModal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+    function closeModal() {
+      els.ocrModal.hidden = true;
+      els.ocrModal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      // 進捗リセット（ファイル選択は保持しない）
+      if (els.ocrRun.disabled === false && els.ocrProgress.hidden) {
+        // idle時のみクリア
+      }
+    }
+    function resetOCRState() {
+      selectedFile = null;
+      if (els.ocrFile) els.ocrFile.value = "";
+      if (els.ocrPreview) els.ocrPreview.hidden = true;
+      if (els.ocrRun) els.ocrRun.disabled = true;
+      if (els.ocrProgress) els.ocrProgress.hidden = true;
+      if (els.ocrBar) els.ocrBar.style.width = "0%";
+      if (els.ocrStatus) els.ocrStatus.textContent = "待機中";
+      if (els.ocrWarn) { els.ocrWarn.hidden = true; els.ocrWarn.textContent = ""; els.ocrWarn.className = "ocr-warn"; }
+    }
+    function setFile(file) {
+      if (!file || !file.type.startsWith("image/")) {
+        if (els.ocrWarn) {
+          els.ocrWarn.textContent = "画像ファイル（PNG/JPG）を選択してください。";
+          els.ocrWarn.className = "ocr-warn err";
+          els.ocrWarn.hidden = false;
+        }
+        return;
+      }
+      selectedFile = file;
+      if (els.ocrPreview) {
+        const url = URL.createObjectURL(file);
+        if (els.ocrThumb) {
+          els.ocrThumb.src = url;
+          els.ocrThumb.onload = () => URL.revokeObjectURL(url);
+        }
+        if (els.ocrFilename) els.ocrFilename.textContent = file.name + " (" + Math.round(file.size / 1024) + "KB)";
+        els.ocrPreview.hidden = false;
+      }
+      if (els.ocrRun) els.ocrRun.disabled = false;
+      if (els.ocrWarn) els.ocrWarn.hidden = true;
+      if (els.ocrProgress) els.ocrProgress.hidden = true;
+    }
+
+    els.ocrBtn.addEventListener("click", () => {
+      resetOCRState();
+      openModal();
+    });
+    if (els.ocrClose) els.ocrClose.addEventListener("click", closeModal);
+    if (els.ocrCancel) els.ocrCancel.addEventListener("click", closeModal);
+    if (els.ocrBackdrop) els.ocrBackdrop.addEventListener("click", closeModal);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !els.ocrModal.hidden) closeModal();
+    });
+
+    if (els.ocrDrop) {
+      els.ocrDrop.addEventListener("click", (e) => {
+        // inputクリックとの二重発火を防ぐ
+        if (e.target === els.ocrFile) return;
+      });
+      els.ocrDrop.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        els.ocrDrop.classList.add("drag");
+      });
+      els.ocrDrop.addEventListener("dragleave", () => els.ocrDrop.classList.remove("drag"));
+      els.ocrDrop.addEventListener("drop", (e) => {
+        e.preventDefault();
+        els.ocrDrop.classList.remove("drag");
+        const f = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) setFile(f);
+      });
+    }
+    if (els.ocrFile) {
+      els.ocrFile.addEventListener("change", () => {
+        const f = els.ocrFile.files && els.ocrFile.files[0];
+        if (f) setFile(f);
+      });
+    }
+    window.addEventListener("paste", (e) => {
+      if (els.ocrModal.hidden) return;
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (const it of items) {
+        if (it.kind === "file") {
+          const f = it.getAsFile();
+          if (f && f.type.startsWith("image/")) {
+            setFile(f);
+            openModal();
+            e.preventDefault();
+            break;
+          }
+        }
+      }
+    });
+
+    if (els.ocrRun) {
+      els.ocrRun.addEventListener("click", async () => {
+        if (!selectedFile) return;
+        if (!window.PokemonBagOCR || !window.PokemonBagOCR.runOnce) {
+          if (els.ocrWarn) {
+            els.ocrWarn.textContent = "OCRモジュールの読み込みに失敗しました。ページを再読み込みしてください。";
+            els.ocrWarn.className = "ocr-warn err";
+            els.ocrWarn.hidden = false;
+          }
+          return;
+        }
+        els.ocrRun.disabled = true;
+        els.ocrRun.textContent = "認識中...";
+        if (els.ocrProgress) els.ocrProgress.hidden = false;
+        if (els.ocrBar) els.ocrBar.style.width = "5%";
+        if (els.ocrStatus) els.ocrStatus.textContent = "準備中...";
+        if (els.ocrWarn) els.ocrWarn.hidden = true;
+
+        try {
+          const result = await window.PokemonBagOCR.runOnce(selectedFile, (msg, p) => {
+            if (els.ocrStatus) els.ocrStatus.textContent = msg;
+            if (typeof p === "number" && els.ocrBar) els.ocrBar.style.width = p + "%";
+          });
+          setCountsFromOCR(result.counts);
+          if (els.ocrBar) els.ocrBar.style.width = "100%";
+          if (els.ocrStatus) els.ocrStatus.textContent = "完了（" + result.counts.filter((n) => n > 0).length + "件/19件）";
+          if (result.warnings && result.warnings.length) {
+            if (els.ocrWarn) {
+              els.ocrWarn.textContent = result.warnings.join(" ");
+              els.ocrWarn.className = "ocr-warn warn";
+              els.ocrWarn.hidden = false;
+            }
+          }
+          // 少し表示してから自動で閉じる
+          setTimeout(() => {
+            closeModal();
+            els.ocrRun.textContent = "OCR実行";
+            els.ocrRun.disabled = false;
+            // 「食材と個数を入力」モードへ切替済みなら結果が見える。切替前なら自動で切り替える
+            if (!els.modeCount.checked) {
+              els.modeCount.checked = true;
+              switchPane();
+              apply();
+            }
+          }, result.warnings && result.warnings.length ? 1800 : 700);
+        } catch (err) {
+          if (els.ocrStatus) els.ocrStatus.textContent = "エラー";
+          if (els.ocrWarn) {
+            els.ocrWarn.textContent = err.message || String(err);
+            els.ocrWarn.className = "ocr-warn err";
+            els.ocrWarn.hidden = false;
+          }
+          els.ocrRun.textContent = "OCR実行";
+          els.ocrRun.disabled = false;
+        }
+      });
+    }
+  })();
 
   loadData().catch((err) => {
     els.recipes.innerHTML = '<div class="loading">データの読み込みに失敗しました: ' + err.message + "</div>";
