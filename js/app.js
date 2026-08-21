@@ -1,6 +1,30 @@
 (function () {
   "use strict";
 
+  const ABBR = {
+    "ふといながねぎ": "ながねぎ",
+    "あじわいキノコ": "キノコ",
+    "とくせんエッグ": "エッグ",
+    "ほっこりポテト": "ポテト",
+    "とくせんリンゴ": "リンゴ",
+    "げきからハーブ": "ハーブ",
+    "マメミート": "ミート",
+    "モーモーミルク": "ミルク",
+    "あまいミツ": "ミツ",
+    "ピュアなオイル": "オイル",
+    "あったかジンジャー": "ジンジャー",
+    "あんみんトマト": "トマト",
+    "リラックスカカオ": "カカオ",
+    "おいしいシッポ": "シッポ",
+    "ワカクサ大豆": "大豆",
+    "ワカクサコーン": "コーン",
+    "めざましコーヒー": "コーヒー",
+    "ずっしりカボチャ": "カボチャ",
+    "つやつやアボカド": "アボカド"
+  };
+
+  const abbr = (name) => ABBR[name] || name;
+
   const CATEGORIES = [
     { key: "curry", label: "カレー" },
     { key: "dessert", label: "デザート" },
@@ -88,7 +112,7 @@
         else state.ngSet.delete(name);
       });
       label.appendChild(check);
-      label.appendChild(document.createTextNode(name));
+      label.appendChild(document.createTextNode(abbr(name)));
       frag.appendChild(label);
     }
     els.ngList.innerHTML = "";
@@ -116,7 +140,7 @@
         saveHl();
       });
       label.appendChild(check);
-      label.appendChild(document.createTextNode(name));
+      label.appendChild(document.createTextNode(abbr(name)));
       frag.appendChild(label);
     }
     els.hlList.innerHTML = "";
@@ -255,7 +279,7 @@
       for (const [name, qty] of Object.entries(hit.quantities).sort()) {
         const chip = document.createElement("span");
         chip.className = state.hlSet.has(name) ? "ing-chip hl" : "ing-chip";
-        chip.textContent = name + " ×" + qty;
+        chip.textContent = abbr(name) + " ×" + qty;
         ings.appendChild(chip);
       }
 

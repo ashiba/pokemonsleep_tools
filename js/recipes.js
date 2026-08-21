@@ -37,7 +37,8 @@
     catCountEl: {},
     catTotal: {},
     catVisible: {},
-    catSectionEl: {}
+    catSectionEl: {},
+    selected: new Set()
   };
 
   const $ = (id) => document.getElementById(id);
@@ -59,6 +60,9 @@
     clearCount: $("clear-count"),
     catFilters: $("cat-filters"),
     recipes: $("recipes"),
+    selectedCount: $("selected-count"),
+    selectedSummary: $("selected-summary"),
+    clearSelected: $("clear-selected"),
     ocrBtn: $("ocr-btn"),
     ocrModal: $("ocr-modal"),
     ocrBackdrop: $("ocr-backdrop"),
@@ -93,6 +97,7 @@
     buildCatFilters();
     renderAll();
     apply();
+    updateSelectedSummary();
   }
 
   function buildCatFilters() {
@@ -168,6 +173,20 @@
         card.dataset.ridx = idx;
 
         const dish = el("div", "dish");
+        const checkLabel = document.createElement("label");
+        checkLabel.className = "recipe-check";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.dataset.key = key + ":" + idx;
+        cb.addEventListener("change", () => {
+          const k = cb.dataset.key;
+          if (cb.checked) state.selected.add(k);
+          else state.selected.delete(k);
+          card.classList.toggle("selected", cb.checked);
+          updateSelectedSummary();
+        });
+        checkLabel.appendChild(cb);
+        dish.appendChild(checkLabel);
         dish.appendChild(el("span", "name", recipe.name));
         const meta = el("div", "dish-meta");
         meta.appendChild(el("span", "total", "" + recipe.ingredients.reduce((s, ing) => s + ing.count, 0)));
@@ -189,6 +208,39 @@
       frag.appendChild(section);
     }
     els.recipes.appendChild(frag);
+  }
+
+  function updateSelectedSummary() {
+    const count = state.selected.size;
+    if (els.selectedCount) els.selectedCount.textContent = count + "件";
+    if (!els.selectedSummary) return;
+    if (count === 0) {
+      els.selectedSummary.className = "empty";
+      els.selectedSummary.textContent = "レシピにチェックを入れると必要食材が表示されます";
+      return;
+    }
+    const maxCounts = {};
+    for (const key of state.selected) {
+      const [cat, idxStr] = key.split(":");
+      const idx = parseInt(idxStr, 10);
+      const recipe = state.categories[cat] && state.categories[cat].recipes[idx];
+      if (!recipe) continue;
+      for (const ing of recipe.ingredients) {
+        maxCounts[ing.name] = Math.max(maxCounts[ing.name] || 0, ing.count);
+      }
+    }
+    els.selectedSummary.className = "ings";
+    els.selectedSummary.innerHTML = "";
+    const sorted = Object.entries(maxCounts).sort((a, b) => a[0].localeCompare(b[0], "ja"));
+    for (const [name, qty] of sorted) {
+      const chip = el("span", "ing-chip", abbr(name) + " ×" + qty);
+      els.selectedSummary.appendChild(chip);
+    }
+    const totalTypes = sorted.length;
+    const totalCount = Object.values(maxCounts).reduce((s, n) => s + n, 0);
+    const meta = el("div", "selected-meta");
+    meta.textContent = totalTypes + "種類 / 合計" + totalCount + "個 (各食材は最大個数)";
+    els.selectedSummary.appendChild(meta);
   }
 
   function resetCard(card) {
@@ -279,6 +331,18 @@
     els.counts.querySelectorAll("input").forEach((inp) => (inp.value = "0"));
     apply();
   });
+
+  if (els.clearSelected) {
+    els.clearSelected.addEventListener("click", () => {
+      state.selected.clear();
+      els.recipes.querySelectorAll('.recipe-select, .recipe-check input[type="checkbox"]').forEach((cb) => (cb.checked = false));
+      els.recipes.querySelectorAll(".recipe-card.selected").forEach((card) => card.classList.remove("selected"));
+      // fallback: ensure all checkboxes unchecked
+      els.recipes.querySelectorAll('input[data-key]').forEach((cb) => (cb.checked = false));
+      document.querySelectorAll(".recipe-card").forEach((card) => card.classList.remove("selected"));
+      updateSelectedSummary();
+    });
+  }
 
   // OCR: 数量一括入力
   function setCountsFromOCR(counts) {
