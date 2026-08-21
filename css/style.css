@@ -508,10 +508,58 @@ main {
 
 .recipe-card .dish {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
   gap: 4px 8px;
   margin-bottom: 6px;
+}
+
+.recipe-check {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  padding-top: 2px;
+}
+
+.recipe-check input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.recipe-card.selected {
+  border-color: #7aa5c4;
+  background: #f0f6ff;
+}
+
+#selected-panel .count {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+#selected-summary {
+  margin-top: 8px;
+}
+
+#selected-summary.empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 8px 0;
+}
+
+#selected-summary.ings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.selected-meta {
+  width: 100%;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .recipe-card .dish .name {
