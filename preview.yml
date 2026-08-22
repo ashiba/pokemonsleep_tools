@@ -1,0 +1,103 @@
+# preview.yml — PRプレビュー用ワークフロー（本来の配置: .github/workflows/preview.yml）
+#
+# 【制約による暫定配置】
+# GitHub App の権限で .github/workflows への直接 push が拒否されるため、
+# 暫定的にリポジトリ直下 (TOPDIR) に配置しています。
+# 手動で以下のコマンドで正規の場所へ移動してください:
+#   git mv preview.yml .github/workflows/preview.yml
+#   git commit -m "PRプレビュー用ワークフローを配置"
+#   git push
+# または GitHub Web 上でファイルを移動してください。
+#
+# 【One-time setup — 初回のみ手動設定が必要】
+# 1. Settings > Actions > General > Workflow permissions で
+#    "Read and write permissions" を選択し Save（rossjrw/pr-preview-action が
+#    gh-pages ブランチへ push するために必要）
+# 2. Settings > Pages > Build and deployment > Source を
+#    "Deploy from a branch" / Branch: gh-pages / /(root) に変更
+#    ※ 現在は "main / /(root)" になっているはずです。切り替え前に gh-pages
+#      ブランチの root に本番ファイルが存在することを確認してください。
+# 3. gh-pages ブランチの初期投入（まだ存在しない場合のみ）:
+#    # ローカルで実行:
+#    git fetch origin
+#    git checkout main
+#    git checkout --orphan gh-pages
+#    git reset
+#    git add index.html search.html recipes.html css js food .nojekyll
+#    # .nojekyll が無ければ作成: touch .nojekyll && git add .nojekyll
+#    git commit -m "gh-pages 初期デプロイ"
+#    git push origin gh-pages
+#    git checkout main
+#    # または下記「本番デプロイ用ワークフロー」を先に導入して main push で自動生成させる
+#
+# 【本番デプロイ用ワークフロー（推奨・任意）】
+# gh-pages を Pages ソースにすると main push だけでは本番が更新されません。
+# そのため本番同期用のワークフローを別途用意することを推奨します。
+# 例: .github/workflows/deploy-pages.yml （手動で作成してください）
+# ---
+# name: Deploy production to gh-pages
+# on:
+#   push:
+#     branches: [main]
+#   workflow_dispatch:
+# permissions:
+#   contents: write
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - run: touch .nojekyll
+#       - uses: JamesIves/github-pages-deploy-action@v4
+#         with:
+#           folder: .
+#           branch: gh-pages
+#           target-folder: .
+#           clean: true
+#           clean-exclude: pr-preview
+#           single-commit: true
+# ---
+# clean-exclude: pr-preview が重要（プレビューを本番デプロイで消さないため）
+# 上記を入れない場合でも一旦は動作しますが、PRプレビューが本番 push で消える可能性があります。
+#
+# 【動作】
+# - PR が opened / synchronize / reopened されると、リポジトリ直下を gh-pages の
+#   pr-preview/pr-<番号>/ にデプロイし、PR にプレビューURLをコメントします
+#   URL例: https://ashiba.github.io/pokemonsleep_tools/pr-preview/pr-123/
+# - PR が closed されるとプレビューを削除します
+# - ビルド不要（バニラJS・静的サイト）のため checkout + .nojekyll 作成のみ
+#
+# 参考: https://github.com/rossjrw/pr-preview-action
+
+name: Deploy PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure .nojekyll
+        if: github.event.action != 'closed'
+        run: touch .nojekyll
+
+      - name: Deploy preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: ./
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto
