@@ -22,19 +22,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Configure Git Identity
         run: |
           git config --global user.name "MuseSpark1.2"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Workaround for https://github.com/anomalyco/opencode/issues/16515
+          # and https://github.com/anomalyco/opencode/issues/37823
+          # TODO: Remove http.extraheader, TOKEN and use_github_token after
+          #       opencode > 1.18.21 with PR #37889 is deployed to api.opencode.ai
+          git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n "x-access-token:${{ secrets.GITHUB_TOKEN }}" | base64 -w0)"
 
       - name: Run OpenCode
         uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           model: opencode/muse-spark-1.2-contributor-free
           use_github_token: "true"
