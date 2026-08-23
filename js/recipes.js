@@ -38,17 +38,12 @@
     catTotal: {},
     catVisible: {},
     catSectionEl: {},
-    selected: new Map()
+    selected: new Set(),
+    bulkMult: 1
   };
 
-  function getMultiplier(key) {
-    return state.selected.get(key) || 1;
-  }
-
-  function toggleMultiplier(key, mult) {
-    const cur = getMultiplier(key);
-    const next = cur === mult ? 1 : mult;
-    state.selected.set(key, next);
+  function setBulkMult(mult) {
+    state.bulkMult = mult;
     updateSelectedSummary();
     apply();
   }
@@ -196,7 +191,7 @@
         cb.dataset.key = key + ":" + idx;
         cb.addEventListener("change", () => {
           const k = cb.dataset.key;
-          if (cb.checked) state.selected.set(k, 1);
+          if (cb.checked) state.selected.add(k);
           else state.selected.delete(k);
           card.classList.toggle("selected", cb.checked);
           updateSelectedSummary();
@@ -229,12 +224,12 @@
 
   function getReserveCounts() {
     const maxCounts = {};
-    for (const [key, mult] of state.selected) {
+    const m = state.bulkMult || 1;
+    for (const key of state.selected) {
       const [cat, idxStr] = key.split(":");
       const idx = parseInt(idxStr, 10);
       const recipe = state.categories[cat] && state.categories[cat].recipes[idx];
       if (!recipe) continue;
-      const m = mult || 1;
       for (const ing of recipe.ingredients) {
         const need = ing.count * m;
         maxCounts[ing.name] = Math.max(maxCounts[ing.name] || 0, need);
@@ -320,6 +315,7 @@
       return;
     }
     if (count === 0) {
+      if (state.bulkMult !== 1) state.bulkMult = 1;
       els.selectedSummary.className = "empty";
       els.selectedSummary.textContent = "レシピにチェックを入れると必要食材が表示されます";
       renderReserveSection();
@@ -328,9 +324,23 @@
     const maxCounts = getReserveCounts();
     els.selectedSummary.className = "";
     els.selectedSummary.innerHTML = "";
-    // 選択レシピ一覧 + x2/x3ボタン
+    // まとめて倍率コントロール
+    const ctrl = el("div", "bulk-mult");
+    const label = el("span", "bulk-mult-label", "まとめて倍率:");
+    ctrl.appendChild(label);
+    const btnWrap = el("span", "mult-btns");
+    [1, 2, 3].forEach((mult) => {
+      const b = el("button", "mult-btn" + (state.bulkMult === mult ? " on" : ""), "×" + mult);
+      b.type = "button";
+      b.setAttribute("aria-label", "まとめて" + mult + "倍");
+      b.addEventListener("click", () => setBulkMult(mult));
+      btnWrap.appendChild(b);
+    });
+    ctrl.appendChild(btnWrap);
+    els.selectedSummary.appendChild(ctrl);
+    // 選択レシピ一覧（倍率はまとめて表示）
     const list = el("div", "selected-list");
-    for (const [key, mult] of state.selected) {
+    for (const key of state.selected) {
       const [cat, idxStr] = key.split(":");
       const idx = parseInt(idxStr, 10);
       const recipe = state.categories[cat] && state.categories[cat].recipes[idx];
@@ -344,29 +354,17 @@
       catSpan.style.color = "var(--muted)";
       catSpan.style.fontWeight = "400";
       nameWrap.appendChild(catSpan);
-      if (mult > 1) {
-        const multLabel = el("span", "selected-mult-label", " ×" + mult);
+      if (state.bulkMult > 1) {
+        const multLabel = el("span", "selected-mult-label", " ×" + state.bulkMult);
         multLabel.style.fontWeight = "700";
         multLabel.style.color = "var(--accent-dark)";
         nameWrap.appendChild(multLabel);
       }
       item.appendChild(nameWrap);
-      const btns = el("span", "mult-btns");
-      const b2 = el("button", "mult-btn" + (mult === 2 ? " on" : ""), "×2");
-      b2.type = "button";
-      b2.setAttribute("aria-label", recipe.name + " を2倍");
-      b2.addEventListener("click", () => toggleMultiplier(key, 2));
-      const b3 = el("button", "mult-btn" + (mult === 3 ? " on" : ""), "×3");
-      b3.type = "button";
-      b3.setAttribute("aria-label", recipe.name + " を3倍");
-      b3.addEventListener("click", () => toggleMultiplier(key, 3));
-      btns.appendChild(b2);
-      btns.appendChild(b3);
-      item.appendChild(btns);
       list.appendChild(item);
     }
     els.selectedSummary.appendChild(list);
-    // 集計チップ（最大値）
+    // 集計チップ（最大値 × 倍率）
     const chipsWrap = el("div", "ings");
     chipsWrap.style.marginTop = "10px";
     let totalTypes = 0;
@@ -494,6 +492,7 @@
   if (els.clearSelected) {
     els.clearSelected.addEventListener("click", () => {
       state.selected.clear();
+      state.bulkMult = 1;
       els.recipes.querySelectorAll('.recipe-select, .recipe-check input[type="checkbox"]').forEach((cb) => (cb.checked = false));
       els.recipes.querySelectorAll(".recipe-card.selected").forEach((card) => card.classList.remove("selected"));
       // fallback: ensure all checkboxes unchecked
