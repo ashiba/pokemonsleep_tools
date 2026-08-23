@@ -1,14 +1,7 @@
-# preview.yml — PRプレビュー用ワークフロー（本来の配置: .github/workflows/preview.yml）
-#
-# 【制約による暫定配置】
-# GitHub App の権限で .github/workflows への直接 push が拒否されるため、
-# 暫定的にリポジトリ直下 (TOPDIR) に配置しています。
-# 手動で以下のコマンドで正規の場所へ移動してください:
-#   git mv preview.yml .github/workflows/preview.yml
-#   git commit -m "PRプレビュー用ワークフローを配置"
-#   git push
-# または GitHub Web 上でファイルを移動してください。
-#
+# preview.yml — PRプレビュー用ワークフロー
+# 配置: .github/workflows/preview.yml
+# 元は GitHub App の workflows 権限制約により TOPDIR に一時配置されていたが、
+# 手動で正規の場所へ移動済み。
 # 【One-time setup — 初回のみ手動設定が必要】
 # 1. Settings > Actions > General > Workflow permissions で
 #    "Read and write permissions" を選択し Save（rossjrw/pr-preview-action が
