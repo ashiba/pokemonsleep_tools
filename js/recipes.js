@@ -65,7 +65,6 @@
     clearSelected: $("clear-selected"),
     reserveSection: $("reserve-section"),
     reserveSummary: $("reserve-summary"),
-    reserveTableWrap: $("reserve-table-wrap"),
     reserveWarn: $("reserve-warn"),
     useRemaining: $("use-remaining"),
     ocrBtn: $("ocr-btn"),
@@ -251,7 +250,9 @@
     els.reserveSection.hidden = false;
     const reserve = getReserveCounts();
     const ownedRaw = getOwnedRawCounts();
-    // チップ: 残り = 所持 − 確保（最大値） マイナスは警告表示
+    // チップ: 残り = 所持 − 確保（最大値） マイナスは警告表示。並びは state.ingredients 順
+    let hasNeg = false;
+    const negNames = [];
     if (els.reserveSummary) {
       els.reserveSummary.innerHTML = "";
       let hasAny = false;
@@ -261,6 +262,10 @@
         if (owned === 0 && need === 0) continue;
         hasAny = true;
         const remain = owned - need;
+        if (remain < 0) {
+          hasNeg = true;
+          negNames.push(abbr(name) + "×" + Math.abs(remain));
+        }
         const chip = el("span", "ing-chip" + (remain < 0 ? " miss" : ""), abbr(name) + " ×" + remain + (remain < 0 ? " ⚠" : ""));
         if (remain < 0) chip.title = "不足 " + Math.abs(remain) + "個";
         els.reserveSummary.appendChild(chip);
@@ -268,24 +273,7 @@
       if (!hasAny) {
         els.reserveSummary.textContent = "所持・確保ともに対象なし";
       }
-    }
-    // テーブル: 所持 / 確保 / 残り の詳細
-    if (els.reserveTableWrap) {
-      els.reserveTableWrap.innerHTML = "";
-      const table = document.createElement("table");
-      table.className = "reserve-table";
-      const thead = document.createElement("thead");
-      const hr = document.createElement("tr");
-      ["食材", "所持", "確保", "残り"].forEach((t) => {
-        const th = document.createElement("th");
-        th.textContent = t;
-        hr.appendChild(th);
-      });
-      thead.appendChild(hr);
-      table.appendChild(thead);
-      const tbody = document.createElement("tbody");
-      let hasNeg = false;
-      const negNames = [];
+    } else {
       for (const name of state.ingredients) {
         const owned = ownedRaw[name] || 0;
         const need = reserve[name] || 0;
@@ -295,37 +283,17 @@
           hasNeg = true;
           negNames.push(abbr(name) + "×" + Math.abs(remain));
         }
-        const tr = document.createElement("tr");
-        if (remain < 0) tr.className = "neg";
-        const tdName = document.createElement("td");
-        tdName.textContent = abbr(name);
-        const tdOwned = document.createElement("td");
-        tdOwned.textContent = String(owned);
-        tdOwned.className = "num";
-        const tdNeed = document.createElement("td");
-        tdNeed.textContent = String(need);
-        tdNeed.className = "num";
-        const tdRem = document.createElement("td");
-        tdRem.textContent = String(remain);
-        tdRem.className = "num" + (remain < 0 ? " neg" : "");
-        tr.appendChild(tdName);
-        tr.appendChild(tdOwned);
-        tr.appendChild(tdNeed);
-        tr.appendChild(tdRem);
-        tbody.appendChild(tr);
       }
-      table.appendChild(tbody);
-      els.reserveTableWrap.appendChild(table);
-      if (els.reserveWarn) {
-        if (hasNeg) {
-          els.reserveWarn.hidden = false;
-          els.reserveWarn.className = "ocr-warn err";
-          els.reserveWarn.textContent = "所持が不足: " + negNames.join(" / ") + " — マイナスは来週分を確保できない不足数です。";
-        } else {
-          els.reserveWarn.hidden = true;
-          els.reserveWarn.textContent = "";
-          els.reserveWarn.className = "ocr-warn warn";
-        }
+    }
+    if (els.reserveWarn) {
+      if (hasNeg) {
+        els.reserveWarn.hidden = false;
+        els.reserveWarn.className = "ocr-warn err";
+        els.reserveWarn.textContent = "所持が不足: " + negNames.join(" / ") + " — マイナスは来週分を確保できない不足数です。";
+      } else {
+        els.reserveWarn.hidden = true;
+        els.reserveWarn.textContent = "";
+        els.reserveWarn.className = "ocr-warn warn";
       }
     }
   }
@@ -346,12 +314,14 @@
     const maxCounts = getReserveCounts();
     els.selectedSummary.className = "ings";
     els.selectedSummary.innerHTML = "";
-    const sorted = Object.entries(maxCounts).sort((a, b) => a[0].localeCompare(b[0], "ja"));
-    for (const [name, qty] of sorted) {
+    let totalTypes = 0;
+    for (const name of state.ingredients) {
+      const qty = maxCounts[name];
+      if (qty == null) continue;
+      totalTypes++;
       const chip = el("span", "ing-chip", abbr(name) + " ×" + qty);
       els.selectedSummary.appendChild(chip);
     }
-    const totalTypes = sorted.length;
     const totalCount = Object.values(maxCounts).reduce((s, n) => s + n, 0);
     const meta = el("div", "selected-meta");
     meta.textContent = totalTypes + "種類 / 合計" + totalCount + "個 (各食材は最大個数)";
