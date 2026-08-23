@@ -593,6 +593,91 @@ main {
   border: 1px dashed #c5c5c5;
 }
 
+/* Reserve (来週分確保後の残り) */
+#reserve-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+#reserve-section[hidden] {
+  display: none !important;
+}
+.reserve-title {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: var(--accent-dark);
+}
+.reserve-note {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 6px;
+}
+#reserve-summary {
+  margin-bottom: 10px;
+}
+#reserve-summary .ing-chip.miss {
+  background: #fde8e8;
+  color: #8a2a2a;
+  border: 1px solid #e0a0a0;
+}
+.reserve-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin-bottom: 8px;
+}
+.reserve-table th,
+.reserve-table td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  text-align: left;
+}
+.reserve-table th {
+  background: #fbfaf8;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.reserve-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.reserve-table td.num.neg {
+  color: #b91c1c;
+  font-weight: 700;
+  background: #fef2f2;
+}
+.reserve-table tr.neg td:first-child {
+  color: #b91c1c;
+  font-weight: 700;
+}
+.reserve-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+.reserve-toggle input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.reserve-help {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+#reserve-warn {
+  margin-top: 8px;
+}
+
 /* OCR */
 .ocr-btn {
   display: inline-flex;
