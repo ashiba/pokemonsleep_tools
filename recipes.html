@@ -46,6 +46,16 @@
     <section class="panel" id="selected-panel">
       <h2>選択中のレシピ <span id="selected-count" class="count">0件</span></h2>
       <div id="selected-summary" class="empty">レシピにチェックを入れると必要食材が表示されます</div>
+      <div id="reserve-section" hidden>
+        <h3 class="reserve-title">来週分を確保した残り <span class="reserve-note">（所持 − 確保［最大値］）</span></h3>
+        <div id="reserve-summary" class="ings"></div>
+        <p id="reserve-warn" class="ocr-warn warn" hidden></p>
+        <label class="reserve-toggle">
+          <input type="checkbox" id="use-remaining">
+          残りで判定（確保後に作れるレシピをハイライト）
+        </label>
+        <p class="reserve-help">ONで一覧の「作れる」判定が残り基準に切り替わります。OFFは従来通り所持基準です。</p>
+      </div>
       <button type="button" id="clear-selected" class="link-btn">選択をクリア</button>
     </section>
 
