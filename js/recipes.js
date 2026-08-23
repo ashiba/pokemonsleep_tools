@@ -63,6 +63,10 @@
     selectedCount: $("selected-count"),
     selectedSummary: $("selected-summary"),
     clearSelected: $("clear-selected"),
+    reserveSection: $("reserve-section"),
+    reserveSummary: $("reserve-summary"),
+    reserveWarn: $("reserve-warn"),
+    useRemaining: $("use-remaining"),
     ocrBtn: $("ocr-btn"),
     ocrModal: $("ocr-modal"),
     ocrBackdrop: $("ocr-backdrop"),
@@ -184,6 +188,7 @@
           else state.selected.delete(k);
           card.classList.toggle("selected", cb.checked);
           updateSelectedSummary();
+          apply();
         });
         checkLabel.appendChild(cb);
         dish.appendChild(checkLabel);
@@ -210,15 +215,7 @@
     els.recipes.appendChild(frag);
   }
 
-  function updateSelectedSummary() {
-    const count = state.selected.size;
-    if (els.selectedCount) els.selectedCount.textContent = count + "件";
-    if (!els.selectedSummary) return;
-    if (count === 0) {
-      els.selectedSummary.className = "empty";
-      els.selectedSummary.textContent = "レシピにチェックを入れると必要食材が表示されます";
-      return;
-    }
+  function getReserveCounts() {
     const maxCounts = {};
     for (const key of state.selected) {
       const [cat, idxStr] = key.split(":");
@@ -229,18 +226,107 @@
         maxCounts[ing.name] = Math.max(maxCounts[ing.name] || 0, ing.count);
       }
     }
+    return maxCounts;
+  }
+
+  function getOwnedRawCounts() {
+    const owned = {};
+    if (!els.counts) return owned;
+    els.counts.querySelectorAll("input").forEach((inp) => {
+      const v = parseInt(inp.value, 10);
+      owned[inp.dataset.name] = Number.isFinite(v) ? v : 0;
+    });
+    return owned;
+  }
+
+  function renderReserveSection() {
+    if (!els.reserveSection) return;
+    const useCount = els.modeCount && els.modeCount.checked;
+    const count = state.selected.size;
+    if (!useCount || count === 0) {
+      els.reserveSection.hidden = true;
+      return;
+    }
+    els.reserveSection.hidden = false;
+    const reserve = getReserveCounts();
+    const ownedRaw = getOwnedRawCounts();
+    // チップ: 残り = 所持 − 確保（最大値） マイナスは警告表示。並びは state.ingredients 順
+    let hasNeg = false;
+    const negNames = [];
+    if (els.reserveSummary) {
+      els.reserveSummary.innerHTML = "";
+      let hasAny = false;
+      for (const name of state.ingredients) {
+        const owned = ownedRaw[name] || 0;
+        const need = reserve[name] || 0;
+        if (owned === 0 && need === 0) continue;
+        hasAny = true;
+        const remain = owned - need;
+        if (remain < 0) {
+          hasNeg = true;
+          negNames.push(abbr(name) + "×" + Math.abs(remain));
+        }
+        const chip = el("span", "ing-chip" + (remain < 0 ? " miss" : ""), abbr(name) + " ×" + remain + (remain < 0 ? " ⚠" : ""));
+        if (remain < 0) chip.title = "不足 " + Math.abs(remain) + "個";
+        els.reserveSummary.appendChild(chip);
+      }
+      if (!hasAny) {
+        els.reserveSummary.textContent = "所持・確保ともに対象なし";
+      }
+    } else {
+      for (const name of state.ingredients) {
+        const owned = ownedRaw[name] || 0;
+        const need = reserve[name] || 0;
+        if (owned === 0 && need === 0) continue;
+        const remain = owned - need;
+        if (remain < 0) {
+          hasNeg = true;
+          negNames.push(abbr(name) + "×" + Math.abs(remain));
+        }
+      }
+    }
+    if (els.reserveWarn) {
+      if (hasNeg) {
+        els.reserveWarn.hidden = false;
+        els.reserveWarn.className = "ocr-warn err";
+        els.reserveWarn.textContent = "所持が不足: " + negNames.join(" / ") + " — マイナスは来週分を確保できない不足数です。";
+      } else {
+        els.reserveWarn.hidden = true;
+        els.reserveWarn.textContent = "";
+        els.reserveWarn.className = "ocr-warn warn";
+      }
+    }
+  }
+
+  function updateSelectedSummary() {
+    const count = state.selected.size;
+    if (els.selectedCount) els.selectedCount.textContent = count + "件";
+    if (!els.selectedSummary) {
+      renderReserveSection();
+      return;
+    }
+    if (count === 0) {
+      els.selectedSummary.className = "empty";
+      els.selectedSummary.textContent = "レシピにチェックを入れると必要食材が表示されます";
+      renderReserveSection();
+      return;
+    }
+    const maxCounts = getReserveCounts();
     els.selectedSummary.className = "ings";
     els.selectedSummary.innerHTML = "";
-    const sorted = Object.entries(maxCounts).sort((a, b) => a[0].localeCompare(b[0], "ja"));
-    for (const [name, qty] of sorted) {
+    let totalTypes = 0;
+    for (const name of state.ingredients) {
+      const qty = maxCounts[name];
+      if (qty == null) continue;
+      totalTypes++;
       const chip = el("span", "ing-chip", abbr(name) + " ×" + qty);
       els.selectedSummary.appendChild(chip);
     }
-    const totalTypes = sorted.length;
     const totalCount = Object.values(maxCounts).reduce((s, n) => s + n, 0);
     const meta = el("div", "selected-meta");
     meta.textContent = totalTypes + "種類 / 合計" + totalCount + "個 (各食材は最大個数)";
     els.selectedSummary.appendChild(meta);
+    renderReserveSection();
   }
 
   function resetCard(card) {
@@ -270,6 +356,20 @@
 
     const hasInput = useCount ? total > 0 : selected.size > 0;
 
+    // 案B: 残りで判定（確保後に作れるかを残り基準で再計算）
+    let effective = owned;
+    let useRemaining = false;
+    if (useCount && els.useRemaining && els.useRemaining.checked && state.selected.size > 0) {
+      const reserve = getReserveCounts();
+      const ownedRaw = getOwnedRawCounts();
+      const remaining = {};
+      for (const name of state.ingredients) {
+        remaining[name] = (ownedRaw[name] || 0) - (reserve[name] || 0);
+      }
+      effective = remaining;
+      useRemaining = true;
+    }
+
     for (const key of Object.keys(state.categories)) {
       const recipes = state.categories[key].recipes;
       let n = 0;
@@ -281,12 +381,13 @@
         }
 
         if (useCount) {
-          let all = recipe.ingredients.every((ing) => (owned[ing.name] || 0) >= ing.count);
+          const base = useRemaining ? effective : owned;
+          let all = recipe.ingredients.every((ing) => (base[ing.name] || 0) >= ing.count);
           card.classList.toggle("creatable", all);
           if (all) n++;
           card.querySelectorAll(".ing-chip").forEach((chip) => {
             const ing = recipe.ingredients.find((i) => i.name === chip.dataset.name);
-            const ok = (owned[ing.name] || 0) >= ing.count;
+            const ok = (base[ing.name] || 0) >= ing.count;
             chip.classList.toggle("ok", ok);
             chip.classList.toggle("miss", !ok);
           });
@@ -306,6 +407,8 @@
       });
       state.catCountEl[key].textContent = n + "/" + state.catTotal[key];
     }
+    // 残り表示は常に最新化（個数入力変更時にも反映）
+    renderReserveSection();
   }
 
   function switchPane() {
@@ -341,6 +444,13 @@
       els.recipes.querySelectorAll('input[data-key]').forEach((cb) => (cb.checked = false));
       document.querySelectorAll(".recipe-card").forEach((card) => card.classList.remove("selected"));
       updateSelectedSummary();
+      apply();
+    });
+  }
+
+  if (els.useRemaining) {
+    els.useRemaining.addEventListener("change", () => {
+      apply();
     });
   }
 
