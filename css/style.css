@@ -562,6 +562,78 @@ main {
   color: var(--muted);
 }
 
+.bulk-mult {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.bulk-mult-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.selected-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.selected-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.85rem;
+}
+
+.selected-item .selected-name {
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.selected-item .selected-cat {
+  font-weight: 400;
+}
+
+.mult-btns {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.mult-btn {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--accent-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.mult-btn:hover {
+  border-color: var(--accent);
+}
+
+.mult-btn.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 .recipe-card .dish .name {
   font-weight: 600;
 }

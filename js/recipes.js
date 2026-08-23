@@ -38,8 +38,15 @@
     catTotal: {},
     catVisible: {},
     catSectionEl: {},
-    selected: new Set()
+    selected: new Set(),
+    bulkMult: 1
   };
+
+  function setBulkMult(mult) {
+    state.bulkMult = mult;
+    updateSelectedSummary();
+    apply();
+  }
 
   const $ = (id) => document.getElementById(id);
   const el = (tag, className, text) => {
@@ -217,13 +224,15 @@
 
   function getReserveCounts() {
     const maxCounts = {};
+    const m = state.bulkMult || 1;
     for (const key of state.selected) {
       const [cat, idxStr] = key.split(":");
       const idx = parseInt(idxStr, 10);
       const recipe = state.categories[cat] && state.categories[cat].recipes[idx];
       if (!recipe) continue;
       for (const ing of recipe.ingredients) {
-        maxCounts[ing.name] = Math.max(maxCounts[ing.name] || 0, ing.count);
+        const need = ing.count * m;
+        maxCounts[ing.name] = Math.max(maxCounts[ing.name] || 0, need);
       }
     }
     return maxCounts;
@@ -306,22 +315,67 @@
       return;
     }
     if (count === 0) {
+      if (state.bulkMult !== 1) state.bulkMult = 1;
       els.selectedSummary.className = "empty";
       els.selectedSummary.textContent = "レシピにチェックを入れると必要食材が表示されます";
       renderReserveSection();
       return;
     }
     const maxCounts = getReserveCounts();
-    els.selectedSummary.className = "ings";
+    els.selectedSummary.className = "";
     els.selectedSummary.innerHTML = "";
+    // まとめて倍率コントロール
+    const ctrl = el("div", "bulk-mult");
+    const label = el("span", "bulk-mult-label", "まとめて倍率:");
+    ctrl.appendChild(label);
+    const btnWrap = el("span", "mult-btns");
+    [1, 2, 3].forEach((mult) => {
+      const b = el("button", "mult-btn" + (state.bulkMult === mult ? " on" : ""), "×" + mult);
+      b.type = "button";
+      b.setAttribute("aria-label", "まとめて" + mult + "倍");
+      b.addEventListener("click", () => setBulkMult(mult));
+      btnWrap.appendChild(b);
+    });
+    ctrl.appendChild(btnWrap);
+    els.selectedSummary.appendChild(ctrl);
+    // 選択レシピ一覧（倍率はまとめて表示）
+    const list = el("div", "selected-list");
+    for (const key of state.selected) {
+      const [cat, idxStr] = key.split(":");
+      const idx = parseInt(idxStr, 10);
+      const recipe = state.categories[cat] && state.categories[cat].recipes[idx];
+      if (!recipe) continue;
+      const item = el("div", "selected-item");
+      const catLabel = state.categories[cat] ? state.categories[cat].label : cat;
+      const nameWrap = el("span", "selected-name");
+      nameWrap.textContent = recipe.name;
+      const catSpan = el("span", "selected-cat", " (" + catLabel + ")");
+      catSpan.style.fontSize = "0.75rem";
+      catSpan.style.color = "var(--muted)";
+      catSpan.style.fontWeight = "400";
+      nameWrap.appendChild(catSpan);
+      if (state.bulkMult > 1) {
+        const multLabel = el("span", "selected-mult-label", " ×" + state.bulkMult);
+        multLabel.style.fontWeight = "700";
+        multLabel.style.color = "var(--accent-dark)";
+        nameWrap.appendChild(multLabel);
+      }
+      item.appendChild(nameWrap);
+      list.appendChild(item);
+    }
+    els.selectedSummary.appendChild(list);
+    // 集計チップ（最大値 × 倍率）
+    const chipsWrap = el("div", "ings");
+    chipsWrap.style.marginTop = "10px";
     let totalTypes = 0;
     for (const name of state.ingredients) {
       const qty = maxCounts[name];
       if (qty == null) continue;
       totalTypes++;
       const chip = el("span", "ing-chip", abbr(name) + " ×" + qty);
-      els.selectedSummary.appendChild(chip);
+      chipsWrap.appendChild(chip);
     }
+    els.selectedSummary.appendChild(chipsWrap);
     const totalCount = Object.values(maxCounts).reduce((s, n) => s + n, 0);
     const meta = el("div", "selected-meta");
     meta.textContent = totalTypes + "種類 / 合計" + totalCount + "個 (各食材は最大個数)";
@@ -438,6 +492,7 @@
   if (els.clearSelected) {
     els.clearSelected.addEventListener("click", () => {
       state.selected.clear();
+      state.bulkMult = 1;
       els.recipes.querySelectorAll('.recipe-select, .recipe-check input[type="checkbox"]').forEach((cb) => (cb.checked = false));
       els.recipes.querySelectorAll(".recipe-card.selected").forEach((card) => card.classList.remove("selected"));
       // fallback: ensure all checkboxes unchecked
