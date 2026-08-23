@@ -1,6 +1,6 @@
 # ポケモンスリープ ツール
 
-https://ashiba.github.io/pokemonsleep_tools/
+https://pokemonsleep-tools.pages.dev/
 
 ポケモンスリープ の便利ツール集。
 
