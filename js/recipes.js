@@ -3,8 +3,8 @@
 
   const CATEGORIES = [
     { key: "curry" },
-    { key: "dessert" },
-    { key: "salad" }
+    { key: "salad" },
+    { key: "dessert" }
   ];
 
   const ABBR = {
