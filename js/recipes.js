@@ -38,14 +38,26 @@
     catTotal: {},
     catVisible: {},
     catSectionEl: {},
-    selected: new Set(),
-    bulkMult: 1
+    selected: new Map()
   };
 
-  function setBulkMult(mult) {
-    state.bulkMult = mult;
+  function setSelectedMult(key, mult) {
+    if (!state.selected.has(key)) return;
+    state.selected.set(key, mult);
     updateSelectedSummary();
     apply();
+  }
+
+  function calcServings(recipe, base) {
+    let min = Infinity;
+    for (const ing of recipe.ingredients) {
+      const owned = base[ing.name] || 0;
+      if (owned < 0) return 0;
+      const s = Math.floor(owned / ing.count);
+      if (s < min) min = s;
+      if (min === 0) return 0;
+    }
+    return min === Infinity ? 0 : min;
   }
 
   const $ = (id) => document.getElementById(id);
@@ -191,7 +203,7 @@
         cb.dataset.key = key + ":" + idx;
         cb.addEventListener("change", () => {
           const k = cb.dataset.key;
-          if (cb.checked) state.selected.add(k);
+          if (cb.checked) state.selected.set(k, 1);
           else state.selected.delete(k);
           card.classList.toggle("selected", cb.checked);
           updateSelectedSummary();
@@ -204,6 +216,9 @@
         meta.appendChild(el("span", "total", "" + recipe.ingredients.reduce((s, ing) => s + ing.count, 0)));
         meta.appendChild(el("span", "ratio", recipe.ratio.toFixed(2)));
         meta.appendChild(el("span", "energy", "E: " + recipe.initialEnergy.toLocaleString()));
+        const badge = el("span", "servings-badge");
+        badge.hidden = true;
+        meta.appendChild(badge);
         dish.appendChild(meta);
         card.appendChild(dish);
 
@@ -224,12 +239,12 @@
 
   function getReserveCounts() {
     const maxCounts = {};
-    const m = state.bulkMult || 1;
-    for (const key of state.selected) {
+    for (const [key, mult] of state.selected) {
       const [cat, idxStr] = key.split(":");
       const idx = parseInt(idxStr, 10);
       const recipe = state.categories[cat] && state.categories[cat].recipes[idx];
       if (!recipe) continue;
+      const m = mult || 1;
       for (const ing of recipe.ingredients) {
         const need = ing.count * m;
         maxCounts[ing.name] = Math.max(maxCounts[ing.name] || 0, need);
@@ -315,7 +330,6 @@
       return;
     }
     if (count === 0) {
-      if (state.bulkMult !== 1) state.bulkMult = 1;
       els.selectedSummary.className = "empty";
       els.selectedSummary.textContent = "レシピにチェックを入れると必要食材が表示されます";
       renderReserveSection();
@@ -324,23 +338,9 @@
     const maxCounts = getReserveCounts();
     els.selectedSummary.className = "";
     els.selectedSummary.innerHTML = "";
-    // まとめて倍率コントロール
-    const ctrl = el("div", "bulk-mult");
-    const label = el("span", "bulk-mult-label", "まとめて倍率:");
-    ctrl.appendChild(label);
-    const btnWrap = el("span", "mult-btns");
-    [1, 2, 3].forEach((mult) => {
-      const b = el("button", "mult-btn" + (state.bulkMult === mult ? " on" : ""), "×" + mult);
-      b.type = "button";
-      b.setAttribute("aria-label", "まとめて" + mult + "倍");
-      b.addEventListener("click", () => setBulkMult(mult));
-      btnWrap.appendChild(b);
-    });
-    ctrl.appendChild(btnWrap);
-    els.selectedSummary.appendChild(ctrl);
-    // 選択レシピ一覧（倍率はまとめて表示）
+    // 選択レシピ一覧（レシピごとに可変の倍率）
     const list = el("div", "selected-list");
-    for (const key of state.selected) {
+    for (const [key, mult] of state.selected) {
       const [cat, idxStr] = key.split(":");
       const idx = parseInt(idxStr, 10);
       const recipe = state.categories[cat] && state.categories[cat].recipes[idx];
@@ -354,13 +354,18 @@
       catSpan.style.color = "var(--muted)";
       catSpan.style.fontWeight = "400";
       nameWrap.appendChild(catSpan);
-      if (state.bulkMult > 1) {
-        const multLabel = el("span", "selected-mult-label", " ×" + state.bulkMult);
-        multLabel.style.fontWeight = "700";
-        multLabel.style.color = "var(--accent-dark)";
-        nameWrap.appendChild(multLabel);
-      }
       item.appendChild(nameWrap);
+      const btnWrap = el("span", "mult-btns");
+      [1, 2, 3].forEach((m) => {
+        const b = el("button", "mult-btn" + (mult === m ? " on" : ""), "×" + m);
+        b.type = "button";
+        b.setAttribute("aria-label", recipe.name + "を" + m + "倍");
+        b.dataset.key = key;
+        b.dataset.mult = String(m);
+        b.addEventListener("click", () => setSelectedMult(key, m));
+        btnWrap.appendChild(b);
+      });
+      item.appendChild(btnWrap);
       list.appendChild(item);
     }
     els.selectedSummary.appendChild(list);
@@ -388,6 +393,12 @@
     card.querySelectorAll(".ing-chip").forEach((chip) => {
       chip.classList.remove("ok", "miss");
     });
+    const badge = card.querySelector(".servings-badge");
+    if (badge) {
+      badge.hidden = true;
+      badge.textContent = "";
+      badge.classList.remove("show");
+    }
   }
 
   function apply() {
@@ -445,6 +456,19 @@
             chip.classList.toggle("ok", ok);
             chip.classList.toggle("miss", !ok);
           });
+          const badge = card.querySelector(".servings-badge");
+          if (badge) {
+            const servings = calcServings(recipe, base);
+            if (servings >= 1) {
+              badge.textContent = "×" + servings + "食";
+              badge.hidden = false;
+              badge.classList.add("show");
+            } else {
+              badge.textContent = "";
+              badge.hidden = true;
+              badge.classList.remove("show");
+            }
+          }
         } else {
           let all = true;
           for (const ing of recipe.ingredients) {
@@ -457,6 +481,12 @@
             chip.classList.toggle("ok", ok);
             chip.classList.toggle("miss", !ok);
           });
+          const badge = card.querySelector(".servings-badge");
+          if (badge) {
+            badge.hidden = true;
+            badge.textContent = "";
+            badge.classList.remove("show");
+          }
         }
       });
       state.catCountEl[key].textContent = n + "/" + state.catTotal[key];
@@ -492,7 +522,6 @@
   if (els.clearSelected) {
     els.clearSelected.addEventListener("click", () => {
       state.selected.clear();
-      state.bulkMult = 1;
       els.recipes.querySelectorAll('.recipe-select, .recipe-check input[type="checkbox"]').forEach((cb) => (cb.checked = false));
       els.recipes.querySelectorAll(".recipe-card.selected").forEach((card) => card.classList.remove("selected"));
       // fallback: ensure all checkboxes unchecked
