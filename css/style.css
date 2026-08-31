@@ -739,6 +739,44 @@ main {
   margin-top: 8px;
 }
 
+/* Energy controls (Lv/FB) */
+.energy-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+.energy-controls .field {
+  flex: 1 1 200px;
+}
+.energy-controls input[type="range"] {
+  width: 100%;
+  max-width: 240px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.range-val {
+  font-weight: 800;
+  color: var(--accent-dark);
+  margin-left: 4px;
+}
+.range-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.energy-note {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 8px;
+}
+#energy-panel h2 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
 /* OCR */
 .ocr-btn {
   display: inline-flex;

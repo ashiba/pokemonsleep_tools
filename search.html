@@ -41,6 +41,18 @@
           </label>
         </div>
       </div>
+      <div class="controls energy-controls" aria-label="エナジー表示設定">
+        <div class="field">
+          <label for="recipe-level">レシピLv <span id="level-val" class="range-val">1</span></label>
+          <input type="range" id="recipe-level" min="1" max="65" value="1">
+          <span class="range-hint">Lv65で約3.34倍</span>
+        </div>
+        <div class="field">
+          <label for="field-bonus">フィールドボーナス <span id="fb-val" class="range-val">0%</span></label>
+          <input type="range" id="field-bonus" min="0" max="85" step="5" value="0">
+          <span class="range-hint">最大85%</span>
+        </div>
+      </div>
       <div class="fields">
         <div class="field ng-field">
           <label>NG食材 (含む料理を除外)</label>
@@ -64,6 +76,7 @@
     </section>
   </main>
 
+  <script src="js/energy.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

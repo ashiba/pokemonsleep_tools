@@ -31,6 +31,9 @@
 
   const abbr = (name) => ABBR[name] || name;
 
+  const LS_LEVEL = "pokemon-sleep-level-v1";
+  const LS_FB = "pokemon-sleep-fb-v1";
+
   const state = {
     ingredients: [],
     categories: {},
@@ -38,8 +41,45 @@
     catTotal: {},
     catVisible: {},
     catSectionEl: {},
-    selected: new Map()
+    selected: new Map(),
+    level: 1,
+    fb: 0
   };
+
+  function getEnergy(initial) {
+    if (window.RecipeEnergy && window.RecipeEnergy.calcEnergy) {
+      return window.RecipeEnergy.calcEnergy(initial, state.level, state.fb);
+    }
+    return initial;
+  }
+
+  function loadEnergySettings() {
+    try {
+      var lv = parseInt(localStorage.getItem(LS_LEVEL), 10);
+      if (Number.isFinite(lv) && lv >= 1 && lv <= 65) state.level = lv;
+      var fb = parseInt(localStorage.getItem(LS_FB), 10);
+      if (Number.isFinite(fb) && fb >= 0 && fb <= 85) state.fb = fb;
+    } catch (e) {}
+  }
+
+  function saveEnergySettings() {
+    try {
+      localStorage.setItem(LS_LEVEL, String(state.level));
+      localStorage.setItem(LS_FB, String(state.fb));
+    } catch (e) {}
+  }
+
+  function updateEnergyDisplays() {
+    for (const key of Object.keys(state.categories)) {
+      const recipes = state.categories[key].recipes;
+      document.querySelectorAll('.recipe-card[data-cat="' + key + '"]').forEach((card) => {
+        const recipe = recipes[+card.dataset.ridx];
+        if (!recipe) return;
+        const span = card.querySelector(".energy");
+        if (span) span.textContent = "E: " + getEnergy(recipe.initialEnergy).toLocaleString();
+      });
+    }
+  }
 
   function setSelectedMult(key, mult) {
     if (!state.selected.has(key)) return;
@@ -107,8 +147,36 @@
     ocrWarn: $("ocr-warn"),
     ocrPreview: $("ocr-preview"),
     ocrThumb: $("ocr-thumb"),
-    ocrFilename: $("ocr-filename")
+    ocrFilename: $("ocr-filename"),
+    levelSlider: $("recipe-level"),
+    fbSlider: $("field-bonus"),
+    levelVal: $("level-val"),
+    fbVal: $("fb-val")
   };
+
+  function initEnergyControls() {
+    loadEnergySettings();
+    if (els.levelSlider) {
+      els.levelSlider.value = String(state.level);
+      els.levelSlider.addEventListener("input", () => {
+        state.level = parseInt(els.levelSlider.value, 10) || 1;
+        if (els.levelVal) els.levelVal.textContent = String(state.level);
+        saveEnergySettings();
+        updateEnergyDisplays();
+      });
+      if (els.levelVal) els.levelVal.textContent = String(state.level);
+    }
+    if (els.fbSlider) {
+      els.fbSlider.value = String(state.fb);
+      els.fbSlider.addEventListener("input", () => {
+        state.fb = parseInt(els.fbSlider.value, 10) || 0;
+        if (els.fbVal) els.fbVal.textContent = state.fb + "%";
+        saveEnergySettings();
+        updateEnergyDisplays();
+      });
+      if (els.fbVal) els.fbVal.textContent = state.fb + "%";
+    }
+  }
 
   async function loadData() {
     const [ingredients, ...lists] = await Promise.all([
@@ -125,7 +193,9 @@
     });
     buildInputs();
     buildCatFilters();
+    initEnergyControls();
     renderAll();
+    updateEnergyDisplays();
     apply();
     updateSelectedSummary();
   }
@@ -222,7 +292,7 @@
         const meta = el("div", "dish-meta");
         meta.appendChild(el("span", "total", "" + recipe.ingredients.reduce((s, ing) => s + ing.count, 0)));
         meta.appendChild(el("span", "ratio", recipe.ratio.toFixed(2)));
-        meta.appendChild(el("span", "energy", "E: " + recipe.initialEnergy.toLocaleString()));
+        meta.appendChild(el("span", "energy", "E: " + getEnergy(recipe.initialEnergy).toLocaleString()));
         const badge = el("span", "servings-badge");
         badge.hidden = true;
         meta.appendChild(badge);
