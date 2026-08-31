@@ -754,11 +754,57 @@ main {
   max-width: 240px;
   accent-color: var(--accent);
   cursor: pointer;
+  height: 36px;
+  padding: 6px 0;
+  touch-action: pan-x;
+}
+.energy-controls input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+}
+.energy-controls input[type="range"]::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+}
+.energy-controls input[type="range"]::-webkit-slider-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  margin-top: -10px;
+  box-shadow: 0 0 0 6px transparent;
+}
+.energy-controls input[type="range"]::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 0 0 6px transparent;
+}
+@media (max-width: 640px) {
+  .energy-controls input[type="range"] {
+    max-width: none;
+    height: 44px;
+  }
+  .energy-controls input[type="range"]::-webkit-slider-thumb {
+    width: 32px;
+    height: 32px;
+    margin-top: -12px;
+  }
+  .energy-controls input[type="range"]::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+  }
 }
 .range-val {
   font-weight: 800;
   color: var(--accent-dark);
   margin-left: 4px;
+}
+.range-mult {
+  font-weight: 700;
+  color: var(--accent-dark);
+  margin-left: 2px;
+  font-size: 0.85em;
 }
 .range-hint {
   font-size: 0.72rem;

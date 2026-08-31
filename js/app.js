@@ -51,10 +51,24 @@
     return initial;
   }
 
+  function formatLevelMult(level) {
+    if (window.RecipeEnergy && window.RecipeEnergy.getLevelBonus) {
+      var bonus = window.RecipeEnergy.getLevelBonus(level);
+      var mult = 1 + bonus / 100;
+      return mult.toFixed(2) + "倍";
+    }
+    return "";
+  }
+
+  function updateLevelLabel() {
+    if (els.levelVal) els.levelVal.textContent = String(state.level);
+    if (els.levelMult) els.levelMult.textContent = " (" + formatLevelMult(state.level) + ")";
+  }
+
   function loadEnergySettings() {
     try {
       var lv = parseInt(localStorage.getItem(LS_LEVEL), 10);
-      if (Number.isFinite(lv) && lv >= 1 && lv <= 65) state.level = lv;
+      if (Number.isFinite(lv) && lv >= 1 && lv <= 70) state.level = lv;
       var fb = parseInt(localStorage.getItem(LS_FB), 10);
       if (Number.isFinite(fb) && fb >= 0 && fb <= 85) state.fb = fb;
     } catch (e) {}
@@ -109,6 +123,7 @@
     levelSlider: $("recipe-level"),
     fbSlider: $("field-bonus"),
     levelVal: $("level-val"),
+    levelMult: $("level-mult"),
     fbVal: $("fb-val")
   };
 
@@ -116,10 +131,10 @@
     loadEnergySettings();
     if (els.levelSlider) {
       els.levelSlider.value = String(state.level);
-      if (els.levelVal) els.levelVal.textContent = String(state.level);
+      updateLevelLabel();
       els.levelSlider.addEventListener("input", () => {
         state.level = parseInt(els.levelSlider.value, 10) || 1;
-        if (els.levelVal) els.levelVal.textContent = String(state.level);
+        updateLevelLabel();
         saveEnergySettings();
         if (state.lastHits) search();
       });
