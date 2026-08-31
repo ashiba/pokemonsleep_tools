@@ -48,6 +48,13 @@
     apply();
   }
 
+  function setBulkMult(mult) {
+    if (state.selected.size === 0) return;
+    for (const k of state.selected.keys()) state.selected.set(k, mult);
+    updateSelectedSummary();
+    apply();
+  }
+
   function calcServings(recipe, base) {
     let min = Infinity;
     for (const ing of recipe.ingredients) {
@@ -338,6 +345,17 @@
     const maxCounts = getReserveCounts();
     els.selectedSummary.className = "";
     els.selectedSummary.innerHTML = "";
+    // まとめて倍率切替
+    const bulk = el("div", "bulk-mult");
+    bulk.appendChild(el("span", "bulk-mult-label", "全部まとめて:"));
+    [1, 2, 3].forEach((m) => {
+      const b = el("button", "mult-btn", "×" + m);
+      b.type = "button";
+      b.setAttribute("aria-label", "全部を×" + m + "に");
+      b.addEventListener("click", () => setBulkMult(m));
+      bulk.appendChild(b);
+    });
+    els.selectedSummary.appendChild(bulk);
     // 選択レシピ一覧（レシピごとに可変の倍率）
     const list = el("div", "selected-list");
     for (const [key, mult] of state.selected) {
