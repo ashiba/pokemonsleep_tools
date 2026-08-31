@@ -43,6 +43,22 @@
       </div>
     </section>
 
+    <section class="panel" id="energy-panel" aria-label="エナジー表示設定">
+      <h2>エナジー表示設定 <span class="energy-note">LvとFBでカードのEを再計算します</span></h2>
+      <div class="energy-controls">
+        <div class="field">
+          <label for="recipe-level">レシピLv <span id="level-val" class="range-val">1</span><span id="level-mult" class="range-mult"></span></label>
+          <input type="range" id="recipe-level" min="1" max="70" value="1">
+          <span class="range-hint">Lv70で約3.58倍</span>
+        </div>
+        <div class="field">
+          <label for="field-bonus">フィールドボーナス <span id="fb-val" class="range-val">0%</span></label>
+          <input type="range" id="field-bonus" min="0" max="85" step="5" value="0">
+          <span class="range-hint">最大85%</span>
+        </div>
+      </div>
+    </section>
+
     <section class="panel" id="selected-panel">
       <h2>選択中のレシピ <span id="selected-count" class="count">0件</span></h2>
       <div id="selected-summary" class="empty">レシピにチェックを入れると必要食材が表示されます</div>
@@ -98,6 +114,7 @@
     </div>
   </div>
 
+  <script src="js/energy.js"></script>
   <script src="js/ocr-ingredient.js"></script>
   <script src="js/recipes.js"></script>
 </body>

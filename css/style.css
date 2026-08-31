@@ -739,6 +739,113 @@ main {
   margin-top: 8px;
 }
 
+/* Energy controls (Lv/FB) */
+.energy-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+.energy-controls .field {
+  flex: 1 1 200px;
+}
+.energy-controls input[type="range"] {
+  width: 100%;
+  max-width: 240px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 36px;
+  padding: 6px 0;
+  touch-action: pan-x;
+}
+.energy-controls input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+}
+.energy-controls input[type="range"]::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+}
+.energy-controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  margin-top: -10px;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.22), 0 0 0 6px transparent;
+  cursor: pointer;
+}
+.energy-controls input[type="range"]::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.22), 0 0 0 6px transparent;
+  cursor: pointer;
+}
+.energy-controls input[type="range"]:hover::-webkit-slider-thumb {
+  background: var(--accent-dark);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.28), 0 0 0 6px transparent;
+}
+.energy-controls input[type="range"]:hover::-moz-range-thumb {
+  background: var(--accent-dark);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.28), 0 0 0 6px transparent;
+}
+.energy-controls input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.05);
+}
+.energy-controls input[type="range"]:active::-moz-range-thumb {
+  transform: scale(1.05);
+}
+@media (max-width: 640px) {
+  .energy-controls input[type="range"] {
+    max-width: none;
+    height: 44px;
+  }
+  .energy-controls input[type="range"]::-webkit-slider-thumb {
+    width: 32px;
+    height: 32px;
+    margin-top: -12px;
+  }
+  .energy-controls input[type="range"]::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+  }
+}
+.range-val {
+  font-weight: 800;
+  color: var(--accent-dark);
+  margin-left: 4px;
+}
+.range-mult {
+  font-weight: 700;
+  color: var(--accent-dark);
+  margin-left: 2px;
+  font-size: 0.85em;
+}
+.range-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.energy-note {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 8px;
+}
+#energy-panel h2 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
 /* OCR */
 .ocr-btn {
   display: inline-flex;
