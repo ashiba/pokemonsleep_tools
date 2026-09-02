@@ -442,6 +442,58 @@ main {
   filter: brightness(0.97);
 }
 
+/* Recipe tabs (mobile) */
+.recipe-tabs {
+  display: none;
+  gap: 8px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.recipe-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.recipe-tabs[hidden] {
+  display: none !important;
+}
+
+.recipe-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.recipe-tab:hover {
+  border-color: var(--accent);
+}
+
+.recipe-tab[aria-selected="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.recipe-tab:focus-visible {
+  outline: 2px solid var(--accent-dark);
+  outline-offset: 2px;
+}
+
 @media (max-width: 560px) {
   .cat-filters {
     gap: 6px;
@@ -489,7 +541,33 @@ main {
 
 @media (max-width: 900px) {
   #recipes {
-    grid-template-columns: 1fr;
+    display: block;
+  }
+  .cat-filters {
+    display: none !important;
+  }
+  .recipe-tabs:not([hidden]) {
+    display: flex !important;
+  }
+  /* hidden attribute controls active tab on mobile */
+  .cat-section[hidden] {
+    display: none !important;
+  }
+  .cat-section {
+    margin-bottom: 16px;
+  }
+  .cat-section:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@media (min-width: 901px) {
+  #recipes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .recipe-tabs {
+    display: none !important;
   }
 }
 
