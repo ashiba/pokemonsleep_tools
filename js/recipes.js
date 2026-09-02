@@ -34,6 +34,8 @@
   const LS_LEVEL = "pokemon-sleep-level-v1";
   const LS_FB = "pokemon-sleep-fb-v1";
 
+  const MOBILE_MAX = 900;
+  const TAB_ALL = "all";
   const state = {
     ingredients: [],
     categories: {},
@@ -43,8 +45,13 @@
     catSectionEl: {},
     selected: new Map(),
     level: 1,
-    fb: 0
+    fb: 0,
+    activeTab: null
   };
+
+  function isMobile() {
+    return window.matchMedia("(max-width: " + MOBILE_MAX + "px)").matches;
+  }
 
   function getEnergy(initial) {
     if (window.RecipeEnergy && window.RecipeEnergy.calcEnergy) {
@@ -139,6 +146,7 @@
     clearCheck: $("clear-check"),
     clearCount: $("clear-count"),
     catFilters: $("cat-filters"),
+    recipeTabs: $("recipe-tabs"),
     recipes: $("recipes"),
     selectedCount: $("selected-count"),
     selectedSummary: $("selected-summary"),
@@ -208,11 +216,16 @@
     });
     buildInputs();
     buildCatFilters();
+    buildTabs();
     initEnergyControls();
     renderAll();
     updateEnergyDisplays();
     apply();
     updateSelectedSummary();
+    applyTabVisibility();
+    initTabSwipe();
+    initTabKeyboard();
+    window.addEventListener("resize", applyTabVisibility);
   }
 
   function buildCatFilters() {
@@ -235,7 +248,139 @@
     state.catVisible[key] = visible;
     btn.classList.toggle("on", visible);
     st.textContent = visible ? "ON" : "OFF";
-    state.catSectionEl[key].style.display = visible ? "" : "none";
+    applyTabVisibility();
+  }
+
+  function buildTabs() {
+    if (!els.recipeTabs) return;
+    els.recipeTabs.innerHTML = "";
+    const keys = Object.keys(state.categories);
+    // default active = first category (ensures 1 category visible on mobile per spec)
+    if (!state.activeTab) state.activeTab = keys[0] || TAB_ALL;
+    function makeTab(key, label, controls) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "recipe-tab";
+      btn.setAttribute("role", "tab");
+      btn.id = "tab-" + key;
+      if (controls) btn.setAttribute("aria-controls", controls);
+      btn.dataset.key = key;
+      btn.textContent = label;
+      btn.addEventListener("click", () => setActiveTab(key));
+      els.recipeTabs.appendChild(btn);
+      return btn;
+    }
+    const allControls = keys.map((k) => "panel-" + k).join(" ");
+    makeTab(TAB_ALL, "全て", allControls);
+    for (const k of keys) {
+      makeTab(k, state.categories[k].label, "panel-" + k);
+    }
+    els.recipeTabs.hidden = false;
+    updateTabsUI();
+  }
+
+  function setActiveTab(key) {
+    state.activeTab = key;
+    updateTabsUI();
+    applyTabVisibility();
+  }
+
+  function updateTabsUI() {
+    if (!els.recipeTabs) return;
+    const tabs = els.recipeTabs.querySelectorAll('[role="tab"]');
+    tabs.forEach((t) => {
+      const isActive = t.dataset.key === state.activeTab;
+      t.setAttribute("aria-selected", isActive ? "true" : "false");
+      t.tabIndex = isActive ? 0 : -1;
+    });
+  }
+
+  function applyTabVisibility() {
+    const keys = Object.keys(state.categories);
+    if (isMobile()) {
+      for (const k of keys) {
+        const sec = state.catSectionEl[k];
+        if (!sec) continue;
+        const show = state.activeTab === TAB_ALL || state.activeTab === k;
+        sec.hidden = !show;
+        sec.style.display = "";
+      }
+    } else {
+      for (const k of keys) {
+        const sec = state.catSectionEl[k];
+        if (!sec) continue;
+        sec.hidden = false;
+        sec.style.display = state.catVisible[k] ? "" : "none";
+      }
+    }
+  }
+
+  function getTabOrder() {
+    return [TAB_ALL].concat(Object.keys(state.categories));
+  }
+
+  function getSwipeOrder() {
+    return Object.keys(state.categories);
+  }
+
+  function initTabSwipe() {
+    if (!els.recipes) return;
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    els.recipes.addEventListener("touchstart", (e) => {
+      if (!isMobile()) return;
+      if (e.touches.length !== 1) return;
+      tracking = true;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+    els.recipes.addEventListener("touchend", (e) => {
+      if (!tracking) return;
+      tracking = false;
+      if (!isMobile()) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) < 50) return;
+      if (Math.abs(dx) < Math.abs(dy)) return;
+      const order = getSwipeOrder();
+      let idx = order.indexOf(state.activeTab);
+      if (idx === -1) {
+        // if "all" or unknown, go to first/last depending on direction
+        idx = dx < 0 ? -1 : 0;
+      }
+      let nextIdx;
+      if (dx < 0) {
+        // swipe left -> next
+        nextIdx = (idx + 1) % order.length;
+      } else {
+        nextIdx = (idx - 1 + order.length) % order.length;
+      }
+      setActiveTab(order[nextIdx]);
+      const nextTab = els.recipeTabs && els.recipeTabs.querySelector('[data-key="' + order[nextIdx] + '"]');
+      if (nextTab) nextTab.focus({ preventScroll: true });
+    }, { passive: true });
+  }
+
+  function initTabKeyboard() {
+    if (!els.recipeTabs) return;
+    els.recipeTabs.addEventListener("keydown", (e) => {
+      const tabs = Array.from(els.recipeTabs.querySelectorAll('[role="tab"]'));
+      const idx = tabs.indexOf(document.activeElement);
+      if (idx === -1) return;
+      let next = -1;
+      if (e.key === "ArrowRight") next = (idx + 1) % tabs.length;
+      else if (e.key === "ArrowLeft") next = (idx - 1 + tabs.length) % tabs.length;
+      else if (e.key === "Home") next = 0;
+      else if (e.key === "End") next = tabs.length - 1;
+      else return;
+      e.preventDefault();
+      const target = tabs[next];
+      if (target) {
+        setActiveTab(target.dataset.key);
+        target.focus();
+      }
+    });
   }
 
   function buildInputs() {
@@ -273,6 +418,9 @@
     const frag = document.createDocumentFragment();
     for (const key of Object.keys(state.categories)) {
       const section = el("section", "cat-section");
+      section.id = "panel-" + key;
+      section.setAttribute("role", "tabpanel");
+      section.setAttribute("aria-labelledby", "tab-" + key);
       state.catSectionEl[key] = section;
       const h2 = el("h2", "cat-name", state.categories[key].label);
       const countEl = el("span", "cat-count");
