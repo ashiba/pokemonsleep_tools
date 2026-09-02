@@ -90,25 +90,97 @@
     clone.style.display = "block";
     clone.style.width = "100%";
     clone.style.maxWidth = "none";
-    // 内部の hidden 要素（フィルタOFFのカテゴリ等）はそのまま非表示を維持するが、
-    // レスポンシブで 1列に潰れるのを防ぐため recipes は強制的に 3列化
+    // recipes は「チェックを入れたレシピだけ」を画像に含め、かつ「選択中のレシピ」パネルを先頭に挿入
     if (targetEl.id === "recipes") {
+      // 選択中のレシピパネルをラッパーに挿入（cloneの前に）
+      var selPanelOrig = document.getElementById("selected-panel");
+      if (selPanelOrig) {
+        var selClone = selPanelOrig.cloneNode(true);
+        selClone.hidden = selPanelOrig.hidden;
+        if (selPanelOrig.hidden) selClone.style.display = "none";
+        else { selClone.style.display = "block"; selClone.removeAttribute("hidden"); }
+        selClone.removeAttribute("id");
+        selClone.style.width = "100%";
+        selClone.style.marginBottom = "12px";
+        selClone.style.background = "#fff";
+        selClone.style.border = "1px solid #e3ded3";
+        selClone.style.borderRadius = "10px";
+        selClone.style.padding = "12px 14px";
+        // reserve-section の hidden も原文に合わせる
+        var origReserve = document.getElementById("reserve-section");
+        var cloneReserve = selClone.querySelector("#reserve-section");
+        if (origReserve && cloneReserve) {
+          cloneReserve.hidden = origReserve.hidden;
+          if (origReserve.hidden) cloneReserve.style.display = "none";
+          else cloneReserve.style.display = "block";
+          cloneReserve.removeAttribute("id");
+        }
+        // 操作系ボタンは画像では不要（見た目だけ残すため無効化）
+        var clearBtn = selClone.querySelector("#clear-selected");
+        if (clearBtn) clearBtn.style.display = "none";
+        selClone.querySelectorAll("[id]").forEach(function (el) { el.removeAttribute("id"); });
+        selClone.querySelectorAll("button, input").forEach(function (el) { el.disabled = true; el.style.pointerEvents = "none"; });
+        wrapper.appendChild(selClone);
+      }
+
+      // レシピ一覧はチェックされたものだけに絞る
       clone.style.display = "grid";
-      clone.style.gridTemplateColumns = "repeat(3,1fr)";
       clone.style.gap = "16px";
       clone.style.alignItems = "start";
-      // 子セクションの display:none を一時解除しない（フィルタOFFは反映しない方が意図通りか迷うが、共有時は全部見せたい需要もある。
-      // ここではフィルタ状態を尊重するため clone 内の style.display が none のままなら維持する）
-      // ただし画像幅900でも3列を保つため、各 .cat-section が潰れないようにする
-      clone.querySelectorAll(".cat-section").forEach(function (sec) {
-        // フィルタOFFで display:none になっているものは画像では薄く表示（共有時に欠落を防ぐ）
-        // 代わりにそのまま非表示だと「表示OFFが画像にも反映される」ので、共有用途では全部表示する方が親切。
-        // オフのものは opacityで区別せず、素直に表示する。
-        if (sec.style.display === "none") {
-          sec.style.display = "";
-          sec.style.opacity = "0.55";
+      var origRecipesEl = document.getElementById("recipes");
+      var checkedSet = {};
+      var hasChecked = false;
+      if (origRecipesEl) {
+        origRecipesEl.querySelectorAll('input[type="checkbox"][data-key]').forEach(function (cb) {
+          if (cb.checked) { checkedSet[cb.dataset.key] = true; hasChecked = true; }
+        });
+      }
+      if (hasChecked) {
+        clone.querySelectorAll(".recipe-card").forEach(function (card) {
+          var key = card.dataset.cat + ":" + card.dataset.ridx;
+          if (!checkedSet[key]) card.remove();
+        });
+        var secRemaining = 0;
+        clone.querySelectorAll(".cat-section").forEach(function (sec) {
+          var n = sec.querySelectorAll(".recipe-card").length;
+          if (n === 0) sec.remove();
+          else {
+            secRemaining++;
+            sec.style.display = "";
+            sec.style.opacity = "1";
+          }
+        });
+        if (secRemaining === 1) clone.style.gridTemplateColumns = "1fr";
+        else if (secRemaining === 2) clone.style.gridTemplateColumns = "repeat(2,1fr)";
+        else clone.style.gridTemplateColumns = "repeat(3,1fr)";
+        if (clone.querySelectorAll(".recipe-card").length === 0) {
+          var empty = document.createElement("div");
+          empty.style.gridColumn = "1 / -1";
+          empty.style.fontSize = "12px";
+          empty.style.color = "#6b6570";
+          empty.style.background = "#fff";
+          empty.style.border = "1px solid #e3ded3";
+          empty.style.borderRadius = "8px";
+          empty.style.padding = "12px";
+          empty.style.textAlign = "center";
+          empty.textContent = "チェックされたレシピがありません";
+          clone.appendChild(empty);
         }
-      });
+      } else {
+        clone.querySelectorAll(".recipe-card").forEach(function (c) { c.remove(); });
+        clone.querySelectorAll(".cat-section").forEach(function (s) { s.remove(); });
+        clone.style.gridTemplateColumns = "1fr";
+        var note = document.createElement("div");
+        note.style.fontSize = "12px";
+        note.style.color = "#6b6570";
+        note.style.background = "#fff";
+        note.style.border = "1px solid #e3ded3";
+        note.style.borderRadius = "8px";
+        note.style.padding = "12px";
+        note.style.textAlign = "center";
+        note.textContent = "チェックされたレシピがありません。レシピカードのチェックを入れてから画像保存してください。";
+        clone.appendChild(note);
+      }
     }
     // search: #results は縦並びのまま
     if (targetEl.id === "results") {
