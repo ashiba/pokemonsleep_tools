@@ -309,21 +309,10 @@
   }
 
   function buildExportMeta() {
-    var parts = [];
-    var maxTypes = els.maxTypes.value;
-    var maxPot = els.maxPot && els.maxPot.value ? els.maxPot.value : "∞";
-    var useEnergy = els.filterEnergy.checked;
-    var cond = useEnergy ? ("最低エナジー" + (els.minEnergy.value || "0")) : ("最低ratio" + (els.minRatio.value || "0"));
-    parts.push("食材" + maxTypes + "種以下");
-    parts.push("鍋" + maxPot);
-    parts.push(cond);
-    parts.push("Lv" + state.level + formatLevelMult(state.level) + " FB" + state.fb + "%");
-    var ngArr = [...state.ngSet].map(abbr);
-    parts.push("NG:" + (ngArr.length ? ngArr.join("/") : "なし"));
-    var hlArr = [...state.hlSet].map(abbr);
-    parts.push("ハイライト:" + (hlArr.length ? hlArr.join("/") : "なし"));
-    parts.push(new Date().toLocaleDateString("ja-JP") + " 出力");
-    return parts.join("  \u00b7  ");
+    var lvMult = formatLevelMult(state.level);
+    var lvTxt = "Lv" + state.level + (lvMult ? "(" + lvMult + ")" : "");
+    var dt = new Date().toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    return lvTxt + "  \u00b7  FB" + state.fb + "%  \u00b7  " + dt + " 出力";
   }
 
   function setExportEnabled(enabled) {

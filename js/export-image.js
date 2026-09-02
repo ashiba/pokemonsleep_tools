@@ -211,7 +211,7 @@
     foot.style.color = "#8a8490";
     foot.style.textAlign = "center";
     foot.style.marginTop = "12px";
-    foot.textContent = "pokemonsleep-tools.pages.dev  \u00b7  " + new Date().toLocaleDateString("ja-JP");
+    foot.textContent = "pokemonsleep-tools.pages.dev  \u00b7  " + new Date().toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
     wrapper.appendChild(foot);
 
     document.body.appendChild(wrapper);

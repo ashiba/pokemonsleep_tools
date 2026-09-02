@@ -972,46 +972,10 @@
   })();
 
   function buildRecipesExportMeta() {
-    var parts = [];
-    var mode = els.modeCount && els.modeCount.checked ? "食材と個数を入力" : "食材のみ指定";
-    parts.push("モード:" + mode);
-    parts.push("Lv" + state.level + formatLevelMult(state.level) + " FB" + state.fb + "%");
-    if (state.selected.size > 0) {
-      var selList = [];
-      state.selected.forEach(function (mult, key) {
-        var sp = key.split(":");
-        var cat = sp[0];
-        var idx = parseInt(sp[1], 10);
-        var recipe = state.categories[cat] && state.categories[cat].recipes[idx];
-        if (recipe) {
-          var label = state.categories[cat] ? state.categories[cat].label : cat;
-          selList.push(recipe.name + "(" + label + ")×" + mult);
-        }
-      });
-      parts.push("選択中" + state.selected.size + "件:" + selList.join("/"));
-      var need = getReserveCounts();
-      var needTxt = Object.keys(need).map(function (k) { return abbr(k) + "×" + need[k]; }).join("/");
-      if (needTxt) parts.push("確保:" + needTxt);
-    } else {
-      parts.push("選択中:なし");
-    }
-    if (els.modeCount && els.modeCount.checked) {
-      var owned = getOwnedRawCounts();
-      var hasAny = Object.values(owned).some(function (v) { return v > 0; });
-      if (hasAny) {
-        var txt = Object.keys(owned).filter(function (k) { return owned[k] > 0; }).map(function (k) { return abbr(k) + "×" + owned[k]; }).join("/");
-        parts.push("所持:" + txt);
-      } else {
-        parts.push("所持:なし");
-      }
-      if (els.useRemaining && els.useRemaining.checked) parts.push("残り判定:ON");
-    } else {
-      var sel = [];
-      if (els.checks) els.checks.querySelectorAll("input:checked").forEach(function (cb) { sel.push(abbr(cb.dataset.name)); });
-      parts.push("食材選択:" + (sel.length ? sel.join("/") : "なし"));
-    }
-    parts.push(new Date().toLocaleDateString("ja-JP") + " 出力");
-    return parts.join("  \u00b7  ");
+    var lvMult = formatLevelMult(state.level);
+    var lvTxt = "Lv" + state.level + (lvMult ? "(" + lvMult + ")" : "");
+    var dt = new Date().toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    return lvTxt + "  \u00b7  FB" + state.fb + "%  \u00b7  " + dt + " 出力";
   }
 
   function setRecipesExportStatus(msg, kind) {
