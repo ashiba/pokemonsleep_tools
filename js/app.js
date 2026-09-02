@@ -124,7 +124,9 @@
     fbSlider: $("field-bonus"),
     levelVal: $("level-val"),
     levelMult: $("level-mult"),
-    fbVal: $("fb-val")
+    fbVal: $("fb-val"),
+    exportBtn: $("export-image"),
+    exportStatus: $("export-status")
   };
 
   function initEnergyControls() {
@@ -306,9 +308,47 @@
     render(hits);
   }
 
+  function buildExportMeta() {
+    var parts = [];
+    var maxTypes = els.maxTypes.value;
+    var maxPot = els.maxPot && els.maxPot.value ? els.maxPot.value : "∞";
+    var useEnergy = els.filterEnergy.checked;
+    var cond = useEnergy ? ("最低エナジー" + (els.minEnergy.value || "0")) : ("最低ratio" + (els.minRatio.value || "0"));
+    parts.push("食材" + maxTypes + "種以下");
+    parts.push("鍋" + maxPot);
+    parts.push(cond);
+    parts.push("Lv" + state.level + formatLevelMult(state.level) + " FB" + state.fb + "%");
+    var ngArr = [...state.ngSet].map(abbr);
+    parts.push("NG:" + (ngArr.length ? ngArr.join("/") : "なし"));
+    var hlArr = [...state.hlSet].map(abbr);
+    parts.push("ハイライト:" + (hlArr.length ? hlArr.join("/") : "なし"));
+    parts.push(new Date().toLocaleDateString("ja-JP") + " 出力");
+    return parts.join("  \u00b7  ");
+  }
+
+  function setExportEnabled(enabled) {
+    if (!els.exportBtn) return;
+    els.exportBtn.disabled = !enabled;
+  }
+
+ function setExportStatus(msg, kind) {
+    if (!els.exportStatus) return;
+    if (!msg) {
+      els.exportStatus.hidden = true;
+      els.exportStatus.textContent = "";
+      els.exportStatus.className = "export-status";
+      return;
+    }
+    els.exportStatus.hidden = false;
+    els.exportStatus.textContent = msg;
+    els.exportStatus.className = "export-status " + (kind || "");
+  }
+
   function render(hits) {
     els.count.textContent = hits.length + "件";
     els.results.innerHTML = "";
+    setExportEnabled(hits.length > 0);
+    setExportStatus("", "");
 
     if (hits.length === 0) {
       els.results.appendChild(el("div", "empty", "条件に合う組み合わせがありません"));
@@ -370,6 +410,37 @@ els.filterEnergy.addEventListener("change", () => {
   els.minRatio.disabled = useEnergy;
   els.minEnergy.disabled = !useEnergy;
 });
+
+  if (els.exportBtn) {
+    els.exportBtn.addEventListener("click", async () => {
+      if (!state.lastHits || state.lastHits.length === 0) {
+        setExportStatus("エクスポートする結果がありません。先に検索してください。", "err");
+        return;
+      }
+      var origText = els.exportBtn.textContent;
+      els.exportBtn.disabled = true;
+      els.exportBtn.textContent = "生成中...";
+      setExportStatus("画像を生成しています...", "ok");
+      try {
+        var filename = "pokemonsleep_search_" + (window.PokemonExport ? window.PokemonExport.todayStr() : new Date().toISOString().slice(0,10)) + ".png";
+        var title = "ポケモンスリープ 料理サーチ 結果 (" + state.lastHits.length + "件)";
+        var meta = buildExportMeta();
+        // 上位20件のみを画像に含める旨をサブタイトルで示す
+        var subtitle = state.lastHits.length > 20 ? "上位20件を表示（全" + state.lastHits.length + "件中）" : "";
+        if (window.PokemonExport && window.PokemonExport.exportElement) {
+          await window.PokemonExport.exportElement("results", { title: title, subtitle: subtitle, metaText: meta, filename: filename });
+          setExportStatus("画像を保存しました: " + filename, "ok");
+        } else {
+          throw new Error("エクスポート機能の読み込みに失敗しました");
+        }
+      } catch (e) {
+        setExportStatus(e.message || String(e), "err");
+      } finally {
+        els.exportBtn.textContent = origText;
+        els.exportBtn.disabled = false;
+      }
+    });
+  }
 
   loadData().catch((err) => {
     els.results.innerHTML = '<div class="loading">データの読み込みに失敗しました: ' + err.message + "</div>";

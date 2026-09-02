@@ -224,6 +224,72 @@ main {
   color: var(--muted);
 }
 
+.results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.results-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--accent-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+}
+
+.export-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.export-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #fff;
+  color: var(--accent-dark);
+}
+
+.export-status {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.export-status[hidden] {
+  display: none !important;
+}
+
+.export-status.ok {
+  background: #eef6ee;
+  border: 1px solid #a9d3a9;
+  color: #2f6b2f;
+}
+
+.export-status.err {
+  background: #fde8e8;
+  border: 1px solid #e0a0a0;
+  color: #8a2a2a;
+}
+
 .result-card {
   border: 1px solid var(--border);
   border-radius: 8px;

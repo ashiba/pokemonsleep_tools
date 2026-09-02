@@ -76,10 +76,14 @@
     </section>
 
     <section class="panel">
-      <h2>レシピ一覧</h2>
+      <div class="results-head">
+        <h2>レシピ一覧</h2>
+        <button type="button" id="export-recipes-image" class="export-btn">画像で保存</button>
+      </div>
       <div class="cat-filters" id="cat-filters"></div>
       <div class="recipe-tabs" id="recipe-tabs" role="tablist" aria-label="カテゴリ切替" hidden></div>
       <div id="recipes"></div>
+      <p id="export-recipes-status" class="export-status" hidden></p>
     </section>
   </main>
 
@@ -117,6 +121,7 @@
 
   <script src="js/energy.js"></script>
   <script src="js/ocr-ingredient.js"></script>
+  <script src="js/export-image.js"></script>
   <script src="js/recipes.js"></script>
 </body>
 </html>

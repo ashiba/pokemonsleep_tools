@@ -174,7 +174,9 @@
     fbSlider: $("field-bonus"),
     levelVal: $("level-val"),
     levelMult: $("level-mult"),
-    fbVal: $("fb-val")
+    fbVal: $("fb-val"),
+    exportBtn: $("export-recipes-image"),
+    exportStatus: $("export-recipes-status")
   };
 
   function initEnergyControls() {
@@ -968,6 +970,73 @@
       });
     }
   })();
+
+  function buildRecipesExportMeta() {
+    var parts = [];
+    var mode = els.modeCount && els.modeCount.checked ? "食材と個数を入力" : "食材のみ指定";
+    parts.push("モード:" + mode);
+    parts.push("Lv" + state.level + formatLevelMult(state.level) + " FB" + state.fb + "%");
+    if (els.modeCount && els.modeCount.checked) {
+      var owned = getOwnedRawCounts();
+      var hasAny = Object.values(owned).some(function (v) { return v > 0; });
+      if (hasAny) {
+        var txt = Object.keys(owned).filter(function (k) { return owned[k] > 0; }).map(function (k) { return abbr(k) + "×" + owned[k]; }).join("/");
+        parts.push("所持:" + txt);
+      } else {
+        parts.push("所持:なし");
+      }
+      if (state.selected.size > 0) {
+        var reserve = getReserveCounts();
+        var rTxt = Object.keys(reserve).map(function (k) { return abbr(k) + "×" + reserve[k]; }).join("/");
+        if (rTxt) parts.push("確保:" + rTxt);
+      }
+      if (els.useRemaining && els.useRemaining.checked) parts.push("残り判定:ON");
+    } else {
+      var sel = [];
+      if (els.checks) els.checks.querySelectorAll("input:checked").forEach(function (cb) { sel.push(abbr(cb.dataset.name)); });
+      parts.push("選択:" + (sel.length ? sel.join("/") : "なし"));
+    }
+    parts.push(new Date().toLocaleDateString("ja-JP") + " 出力");
+    return parts.join("  \u00b7  ");
+  }
+
+  function setRecipesExportStatus(msg, kind) {
+    if (!els.exportStatus) return;
+    if (!msg) {
+      els.exportStatus.hidden = true;
+      els.exportStatus.textContent = "";
+      els.exportStatus.className = "export-status";
+      return;
+    }
+    els.exportStatus.hidden = false;
+    els.exportStatus.textContent = msg;
+    els.exportStatus.className = "export-status " + (kind || "");
+  }
+
+  if (els.exportBtn) {
+    els.exportBtn.addEventListener("click", async function () {
+      var orig = els.exportBtn.textContent;
+      els.exportBtn.disabled = true;
+      els.exportBtn.textContent = "生成中...";
+      setRecipesExportStatus("画像を生成しています...", "ok");
+      try {
+        var filename = "pokemonsleep_recipes_" + (window.PokemonExport ? window.PokemonExport.todayStr() : new Date().toISOString().slice(0, 10)) + ".png";
+        var title = "ポケモンスリープ レシピ食材チェッカー";
+        var meta = buildRecipesExportMeta();
+        if (window.PokemonExport && window.PokemonExport.exportElement) {
+          await window.PokemonExport.exportElement("recipes", { title: title, metaText: meta, filename: filename });
+          setRecipesExportStatus("画像を保存しました: " + filename, "ok");
+        } else {
+          throw new Error("エクスポート機能の読み込みに失敗しました");
+        }
+      } catch (e) {
+        setRecipesExportStatus(e.message || String(e), "err");
+      } finally {
+        els.exportBtn.textContent = orig;
+        els.exportBtn.disabled = false;
+      }
+    });
+  }
 
   loadData().catch((err) => {
     els.recipes.innerHTML = '<div class="loading">データの読み込みに失敗しました: ' + err.message + "</div>";
