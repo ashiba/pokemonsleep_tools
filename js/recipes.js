@@ -1002,7 +1002,7 @@
       els.exportBtn.textContent = "生成中...";
       setRecipesExportStatus("画像を生成しています...", "ok");
       try {
-        var filename = "pokemonsleep_recipes_" + (window.PokemonExport ? window.PokemonExport.todayStr() : new Date().toISOString().slice(0, 10)) + ".png";
+        var filename = "pokemonsleep_recipes_" + (window.PokemonExport ? window.PokemonExport.timestampStr() : new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)) + ".png";
         var title = "ポケモンスリープ レシピ食材チェッカー（" + state.selected.size + "件選択）";
         var subtitle = "チェックを入れたレシピのみを抽出";
         var meta = buildRecipesExportMeta();

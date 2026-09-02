@@ -411,7 +411,7 @@ els.filterEnergy.addEventListener("change", () => {
       els.exportBtn.textContent = "生成中...";
       setExportStatus("画像を生成しています...", "ok");
       try {
-        var filename = "pokemonsleep_search_" + (window.PokemonExport ? window.PokemonExport.todayStr() : new Date().toISOString().slice(0,10)) + ".png";
+        var filename = "pokemonsleep_search_" + (window.PokemonExport ? window.PokemonExport.timestampStr() : new Date().toISOString().replace(/[-:]/g, "").slice(0,15)) + ".png";
         var title = "ポケモンスリープ 料理サーチ 結果 (" + state.lastHits.length + "件)";
         var meta = buildExportMeta();
         // 上位20件のみを画像に含める旨をサブタイトルで示す
