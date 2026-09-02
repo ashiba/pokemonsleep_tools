@@ -46,7 +46,7 @@
 - **コミットメッセージ・PRテキストは日本語**。
 - **ブランチ運用**: かつて `feature/* → develop → main` だったが、ユーザーにより develop は廃止。現在は **`feature/*` ブランチで実装 → PR → ユーザーが main へマージ**。小さな変更・指示(README等)は main 直コミットで通る場合もある。
 - ローカル動作確認はルートで `python3 -m http.server 8001`(cwd=リポジトリ直下)。ポート8000は別プロジェクト(ez_sign_daily)が占有。
-- `gh` は無い。PRはブラウザの Compare URL を渡し、ユーザー側でマージしてもらう。認証は SSH(GitHub)。
+- `gh` CLI (GitHub CLI v2.98.0、公式 apt リポジトリ `https://cli.github.com/packages` から導入) が利用可能。`gh auth login` で認証済み (`ashiba`、scope: `repo, workflow, read:org, gist`)。Issue/PR の作成・一覧は `gh issue / gh pr` で行う。PR は従来通りブラウザの Compare URL を渡す運用も可。git 操作自体の認証は SSH(GitHub) を継続。
 - コミットはユーザーが明示的に指示したときのみ。push/PR/マージも同じ。
 - headless Chrome を使う際は `killall -9 google-chrome`(/`python3`)で終了する。`pkill -f google-chrome` は実行シェル自身にマッチしてハングするため使わない。
 
