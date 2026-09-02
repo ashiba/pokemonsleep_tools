@@ -10,7 +10,8 @@
         }
       ],
       "initialEnergy": 748,
-      "ratio": 1.06
+      "ratio": 1.06,
+      "totalCount": 7
     },
     {
       "name": "あぶりテールカレー",
@@ -25,7 +26,8 @@
         }
       ],
       "initialEnergy": 7483,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 33
     },
     {
       "name": "サンパワートマトカレー",
@@ -40,7 +42,8 @@
         }
       ],
       "initialEnergy": 2078,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 15
     },
     {
       "name": "ぜったいねむりバターカレー",
@@ -63,7 +66,8 @@
         }
       ],
       "initialEnergy": 9010,
-      "ratio": 1.35
+      "ratio": 1.35,
+      "totalCount": 55
     },
     {
       "name": "からくちネギもりカレー",
@@ -82,7 +86,8 @@
         }
       ],
       "initialEnergy": 5900,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 32
     },
     {
       "name": "キノコのほうしカレー",
@@ -97,7 +102,8 @@
         }
       ],
       "initialEnergy": 4162,
-      "ratio": 1.17
+      "ratio": 1.17,
+      "totalCount": 23
     },
     {
       "name": "おやこあいカレー",
@@ -120,7 +126,8 @@
         }
       ],
       "initialEnergy": 4523,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 35
     },
     {
       "name": "満腹チーズバーグカレー",
@@ -135,7 +142,8 @@
         }
       ],
       "initialEnergy": 1910,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 16
     },
     {
       "name": "ほっこりホワイトシチュー",
@@ -154,7 +162,8 @@
         }
       ],
       "initialEnergy": 3181,
-      "ratio": 1.17
+      "ratio": 1.17,
+      "totalCount": 22
     },
     {
       "name": "たんじゅんホワイトシチュー",
@@ -165,7 +174,8 @@
         }
       ],
       "initialEnergy": 814,
-      "ratio": 1.06
+      "ratio": 1.06,
+      "totalCount": 7
     },
     {
       "name": "マメバーグカレー",
@@ -176,7 +186,8 @@
         }
       ],
       "initialEnergy": 856,
-      "ratio": 1.06
+      "ratio": 1.06,
+      "totalCount": 7
     },
     {
       "name": "ベイビィハニーカレー",
@@ -187,7 +198,8 @@
         }
       ],
       "initialEnergy": 839,
-      "ratio": 1.06
+      "ratio": 1.06,
+      "totalCount": 7
     },
     {
       "name": "ニンジャカレー",
@@ -210,7 +222,8 @@
         }
       ],
       "initialEnergy": 9445,
-      "ratio": 1.48
+      "ratio": 1.48,
+      "totalCount": 50
     },
     {
       "name": "ひでりカツレツカレー",
@@ -225,7 +238,8 @@
         }
       ],
       "initialEnergy": 1942,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 15
     },
     {
       "name": "とけるオムカレー",
@@ -240,7 +254,8 @@
         }
       ],
       "initialEnergy": 2150,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 16
     },
     {
       "name": "ビルドアップマメカレー",
@@ -263,7 +278,8 @@
         }
       ],
       "initialEnergy": 3372,
-      "ratio": 1.17
+      "ratio": 1.17,
+      "totalCount": 26
     },
     {
       "name": "じゅうなんコーンシチュー",
@@ -282,7 +298,8 @@
         }
       ],
       "initialEnergy": 4670,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 30
     },
     {
       "name": "れんごくコーンキーマカレー",
@@ -305,7 +322,8 @@
         }
       ],
       "initialEnergy": 13690,
-      "ratio": 1.48
+      "ratio": 1.48,
+      "totalCount": 77
     },
     {
       "name": "ピヨピヨパンチ辛口カレー",
@@ -324,7 +342,8 @@
         }
       ],
       "initialEnergy": 5702,
-      "ratio": 1.35
+      "ratio": 1.35,
+      "totalCount": 33
     },
     {
       "name": "めざめるパワーシチュー",
@@ -347,7 +366,8 @@
         }
       ],
       "initialEnergy": 19061,
-      "ratio": 1.61
+      "ratio": 1.61,
+      "totalCount": 92
     },
     {
       "name": "いあいぎりすき焼きカレー",
@@ -370,7 +390,8 @@
         }
       ],
       "initialEnergy": 20655,
-      "ratio": 1.61
+      "ratio": 1.61,
+      "totalCount": 101
     },
     {
       "name": "なりきりバケッチャシチュー",
@@ -393,7 +414,8 @@
         }
       ],
       "initialEnergy": 15621,
-      "ratio": 1.48
+      "ratio": 1.48,
+      "totalCount": 69
     },
     {
       "name": "しんりょくアボカドグラタン",
@@ -416,7 +438,8 @@
         }
       ],
       "initialEnergy": 24802,
-      "ratio": 1.78
+      "ratio": 1.78,
+      "totalCount": 115
     },
     {
       "name": "とびはねるカレーうどん",
@@ -439,7 +462,8 @@
         }
       ],
       "initialEnergy": 25539,
-      "ratio": 1.78
+      "ratio": 1.78,
+      "totalCount": 112
     },
     {
       "name": "ワカクサカレーパン",
@@ -462,7 +486,8 @@
         }
       ],
       "initialEnergy": 10945,
-      "ratio": 1.48
+      "ratio": 1.48,
+      "totalCount": 63
     }
   ]
 }

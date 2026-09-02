@@ -253,7 +253,7 @@
   }
 
   function totalCount(recipe) {
-    return recipe.ingredients.reduce((s, ing) => s + ing.count, 0);
+    return recipe.totalCount;
   }
 
   function search() {
