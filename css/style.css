@@ -427,7 +427,7 @@ main {
 
 .ing-counts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 8px;
 }
 
@@ -442,12 +442,91 @@ main {
   padding: 4px 8px;
 }
 
+.ing-counts .count-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ing-counts .stepper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
 .ing-counts input {
-  width: 72px;
+  width: 52px;
   padding: 4px 6px;
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 0.9rem;
+  text-align: right;
+}
+
+.step-btn {
+  min-width: 32px;
+  padding: 6px 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fbfaf8;
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+}
+
+.step-btn:hover {
+  border-color: var(--accent);
+  background: #efeafb;
+}
+
+.step-btn:active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* モバイルでは2段にして窮屈さを回避: 1行目=食材名 / 2行目=ステッパー全幅 */
+@media (max-width: 560px) {
+  .ing-counts {
+    grid-template-columns: 1fr;
+  }
+
+  .ing-counts label.count-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .ing-counts .count-name {
+    flex: 1 1 auto;
+  }
+
+  .ing-counts .stepper {
+    flex: 1 1 100%;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  .ing-counts input {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .step-btn {
+    flex: 1 1 0;
+    padding: 10px 4px;
+    font-size: 0.8rem;
+  }
 }
 
 #recipes {

@@ -128,6 +128,48 @@
     return min === Infinity ? 0 : min;
   }
 
+  const COUNT_MIN = 0;
+  const COUNT_MAX = 999;
+
+  function clampCount(v) {
+    if (!Number.isFinite(v)) return 0;
+    if (v < COUNT_MIN) return COUNT_MIN;
+    if (v > COUNT_MAX) return COUNT_MAX;
+    return Math.floor(v);
+  }
+
+  function setCountInput(input, v) {
+    input.value = String(clampCount(v));
+    apply();
+  }
+
+  function stepCountInput(input, delta) {
+    const cur = parseInt(input.value, 10);
+    setCountInput(input, (Number.isFinite(cur) ? cur : 0) + delta);
+  }
+
+  // 長押しで連射(初回はclickで1回分、押し続けると200ms間隔で連続加算)
+  function bindHoldRepeat(btn, input, delta) {
+    let holdTimer = null;
+    let repeatTimer = null;
+    const clear = () => {
+      if (holdTimer) clearTimeout(holdTimer);
+      if (repeatTimer) clearInterval(repeatTimer);
+      holdTimer = null;
+      repeatTimer = null;
+    };
+    btn.addEventListener("pointerdown", () => {
+      clear();
+      holdTimer = setTimeout(() => {
+        repeatTimer = setInterval(() => stepCountInput(input, delta), 200);
+      }, 400);
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach((ev) =>
+      btn.addEventListener(ev, clear)
+    );
+    btn.addEventListener("click", () => stepCountInput(input, delta));
+    btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
   const $ = (id) => document.getElementById(id);
   const el = (tag, className, text) => {
     const node = document.createElement(tag);
@@ -402,15 +444,56 @@
     const countFrag = document.createDocumentFragment();
     for (const name of state.ingredients) {
       const label = document.createElement("label");
+      label.className = "count-row";
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "count-name";
+      nameSpan.textContent = abbr(name);
+      const stepper = document.createElement("span");
+      stepper.className = "stepper";
       const input = document.createElement("input");
       input.type = "number";
-      input.min = "0";
+      input.min = String(COUNT_MIN);
+      input.max = String(COUNT_MAX);
       input.step = "1";
+      input.inputMode = "numeric";
       input.value = "0";
       input.dataset.name = name;
+      input.setAttribute("aria-label", abbr(name) + "の個数");
       input.addEventListener("input", apply);
-      label.appendChild(document.createTextNode(abbr(name)));
-      label.appendChild(input);
+      input.addEventListener("change", () => {
+        input.value = String(clampCount(parseInt(input.value, 10)));
+        apply();
+      });
+      const defs = [
+        { text: "-10", delta: -10, label: abbr(name) + "を10減らす" },
+        { text: "-1", delta: -1, label: abbr(name) + "を1減らす" },
+        { text: "+1", delta: 1, label: abbr(name) + "を1増やす" },
+        { text: "+10", delta: 10, label: abbr(name) + "を10増やす" }
+      ];
+      // 並び: -10 / -1 / input / +1 / +10
+      defs.slice(0, 2).forEach((d) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "step-btn";
+        b.textContent = d.text;
+        b.setAttribute("aria-label", d.label);
+        b.tabIndex = 0;
+        bindHoldRepeat(b, input, d.delta);
+        stepper.appendChild(b);
+      });
+      stepper.appendChild(input);
+      defs.slice(2).forEach((d) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "step-btn";
+        b.textContent = d.text;
+        b.setAttribute("aria-label", d.label);
+        b.tabIndex = 0;
+        bindHoldRepeat(b, input, d.delta);
+        stepper.appendChild(b);
+      });
+      label.appendChild(nameSpan);
+      label.appendChild(stepper);
       countFrag.appendChild(label);
     }
     els.counts.appendChild(countFrag);
@@ -803,7 +886,7 @@
     const inputs = els.counts.querySelectorAll("input");
     for (let i = 0; i < inputs.length && i < counts.length; i++) {
       const v = counts[i];
-      inputs[i].value = String(Number.isFinite(v) ? v : 0);
+      inputs[i].value = String(clampCount(Number.isFinite(v) ? v : 0));
     }
     apply();
   }
