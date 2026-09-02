@@ -174,7 +174,9 @@
     fbSlider: $("field-bonus"),
     levelVal: $("level-val"),
     levelMult: $("level-mult"),
-    fbVal: $("fb-val")
+    fbVal: $("fb-val"),
+    exportBtn: $("export-recipes-image"),
+    exportStatus: $("export-recipes-status")
   };
 
   function initEnergyControls() {
@@ -968,6 +970,56 @@
       });
     }
   })();
+
+  function buildRecipesExportMeta() {
+    var lvMult = formatLevelMult(state.level);
+    var lvTxt = "Lv" + state.level + (lvMult ? "(" + lvMult + ")" : "");
+    var dt = new Date().toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    return lvTxt + "  \u00b7  FB" + state.fb + "%  \u00b7  " + dt + " 出力";
+  }
+
+  function setRecipesExportStatus(msg, kind) {
+    if (!els.exportStatus) return;
+    if (!msg) {
+      els.exportStatus.hidden = true;
+      els.exportStatus.textContent = "";
+      els.exportStatus.className = "export-status";
+      return;
+    }
+    els.exportStatus.hidden = false;
+    els.exportStatus.textContent = msg;
+    els.exportStatus.className = "export-status " + (kind || "");
+  }
+
+  if (els.exportBtn) {
+    els.exportBtn.addEventListener("click", async function () {
+      if (state.selected.size === 0) {
+        setRecipesExportStatus("レシピにチェックを入れてから実行してください（選択中のレシピが0件です）", "err");
+        return;
+      }
+      var orig = els.exportBtn.textContent;
+      els.exportBtn.disabled = true;
+      els.exportBtn.textContent = "生成中...";
+      setRecipesExportStatus("画像を生成しています...", "ok");
+      try {
+        var filename = "pokemonsleep_recipes_" + (window.PokemonExport ? window.PokemonExport.timestampStr() : new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)) + ".png";
+        var title = "ポケモンスリープ レシピ食材チェッカー（" + state.selected.size + "件選択）";
+        var subtitle = "チェックを入れたレシピのみを抽出";
+        var meta = buildRecipesExportMeta();
+        if (window.PokemonExport && window.PokemonExport.exportElement) {
+          await window.PokemonExport.exportElement("recipes", { title: title, subtitle: subtitle, metaText: meta, filename: filename });
+          setRecipesExportStatus("画像を保存しました: " + filename, "ok");
+        } else {
+          throw new Error("エクスポート機能の読み込みに失敗しました");
+        }
+      } catch (e) {
+        setRecipesExportStatus(e.message || String(e), "err");
+      } finally {
+        els.exportBtn.textContent = orig;
+        els.exportBtn.disabled = false;
+      }
+    });
+  }
 
   loadData().catch((err) => {
     els.recipes.innerHTML = '<div class="loading">データの読み込みに失敗しました: ' + err.message + "</div>";
