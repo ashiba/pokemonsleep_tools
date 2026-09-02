@@ -455,7 +455,7 @@
         dish.appendChild(checkLabel);
         dish.appendChild(el("span", "name", recipe.name));
         const meta = el("div", "dish-meta");
-        meta.appendChild(el("span", "total", "" + recipe.ingredients.reduce((s, ing) => s + ing.count, 0)));
+        meta.appendChild(el("span", "total", "" + recipe.totalCount));
         meta.appendChild(el("span", "ratio", recipe.ratio.toFixed(2)));
         meta.appendChild(el("span", "energy", "E: " + getEnergy(recipe.initialEnergy).toLocaleString()));
         const badge = el("span", "servings-badge");
