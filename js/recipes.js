@@ -330,16 +330,23 @@
   }
 
   function getReserveCounts() {
-    const maxCounts = {};
+    const perCat = {};
     for (const [key, mult] of state.selected) {
       const [cat, idxStr] = key.split(":");
       const idx = parseInt(idxStr, 10);
       const recipe = state.categories[cat] && state.categories[cat].recipes[idx];
       if (!recipe) continue;
       const m = mult || 1;
+      if (!perCat[cat]) perCat[cat] = {};
       for (const ing of recipe.ingredients) {
         const need = ing.count * m;
-        maxCounts[ing.name] = Math.max(maxCounts[ing.name] || 0, need);
+        perCat[cat][ing.name] = (perCat[cat][ing.name] || 0) + need;
+      }
+    }
+    const maxCounts = {};
+    for (const cat of Object.keys(perCat)) {
+      for (const [name, qty] of Object.entries(perCat[cat])) {
+        maxCounts[name] = Math.max(maxCounts[name] || 0, qty);
       }
     }
     return maxCounts;
@@ -366,7 +373,7 @@
     els.reserveSection.hidden = false;
     const reserve = getReserveCounts();
     const ownedRaw = getOwnedRawCounts();
-    // チップ: 残り = 所持 − 確保（最大値） マイナスは警告表示。並びは state.ingredients 順
+    // チップ: 残り = 所持 − 確保（同一カテゴリ内は合計・カテゴリ間は最大値） マイナスは警告表示。並びは state.ingredients 順
     let hasNeg = false;
     const negNames = [];
     if (els.reserveSummary) {
@@ -472,7 +479,7 @@
       list.appendChild(item);
     }
     els.selectedSummary.appendChild(list);
-    // 集計チップ（最大値 × 倍率）
+    // 集計チップ（同一カテゴリ内は合計・カテゴリ間は最大値 × 倍率）
     const chipsWrap = el("div", "ings");
     chipsWrap.style.marginTop = "10px";
     let totalTypes = 0;
@@ -486,7 +493,7 @@
     els.selectedSummary.appendChild(chipsWrap);
     const totalCount = Object.values(maxCounts).reduce((s, n) => s + n, 0);
     const meta = el("div", "selected-meta");
-    meta.textContent = totalTypes + "種類 / 合計" + totalCount + "個 (各食材は最大個数)";
+    meta.textContent = totalTypes + "種類 / 合計" + totalCount + "個 (同一カテゴリ内は合計・カテゴリ間は最大)";
     els.selectedSummary.appendChild(meta);
     renderReserveSection();
   }
