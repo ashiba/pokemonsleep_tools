@@ -978,22 +978,6 @@
     return lvTxt + "  \u00b7  FB" + state.fb + "%  \u00b7  " + dt + " 出力";
   }
 
-  function buildOwnedSummaryText() {
-    if (!els.counts) return "";
-    var inputs = {};
-    els.counts.querySelectorAll("input").forEach(function (inp) {
-      inputs[inp.dataset.name] = parseInt(inp.value, 10);
-    });
-    var parts = [];
-    for (var i = 0; i < state.ingredients.length; i++) {
-      var name = state.ingredients[i];
-      var v = inputs[name];
-      if (Number.isFinite(v) && v > 0) parts.push(abbr(name) + "×" + v);
-    }
-    if (parts.length === 0) return "";
-    return "所持: " + parts.join(" / ");
-  }
-
   function setRecipesExportStatus(msg, kind) {
     if (!els.exportStatus) return;
     if (!msg) {
@@ -1025,11 +1009,6 @@
         var title = "ポケモンスリープ レシピ食材チェッカー（" + state.selected.size + "件選択）";
         var subtitle = "チェックを入れたレシピのみを抽出";
         var meta = buildRecipesExportMeta();
-        // 個数モード時は所持数を画像メタに追記（画像だけ見ても個数条件が分かるように）
-        if (els.modeCount && els.modeCount.checked) {
-          var ownedTxt = buildOwnedSummaryText();
-          if (ownedTxt) meta += "\n" + ownedTxt;
-        }
         if (window.PokemonExport && window.PokemonExport.exportElement) {
           var result = await window.PokemonExport.exportElement("recipes", { title: title, subtitle: subtitle, metaText: meta, filename: filename });
           if (result && result.method === "preview") setRecipesExportStatus("画像を表示しました。長押しで保存、または「共有する」をお使いください", "ok");
