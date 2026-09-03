@@ -78,7 +78,10 @@
     <section class="panel">
       <div class="results-head">
         <h2>レシピ一覧</h2>
-        <button type="button" id="export-recipes-image" class="export-btn">画像で保存</button>
+        <div class="results-actions">
+          <button type="button" id="toggle-low" class="cat-filter on" title="食材数42未満のレシピを隠す/表示する">省略 <span class="st">ON</span></button>
+          <button type="button" id="export-recipes-image" class="export-btn">画像で保存</button>
+        </div>
       </div>
       <p id="export-recipes-status" class="export-status" hidden></p>
       <div class="cat-filters" id="cat-filters"></div>
