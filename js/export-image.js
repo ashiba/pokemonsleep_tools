@@ -143,7 +143,8 @@
       closeBtn.style.color = "#3b3640";
       closeBtn.addEventListener("click", function () {
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 1000);
+        // 「別タブで開く」で開いたタブが blob を読み込む時間を確保するため revoke は遅延させる
+        setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 5 * 60 * 1000);
       });
       btnRow.appendChild(closeBtn);
       panel.appendChild(btnRow);
@@ -158,11 +159,15 @@
     });
   }
 
-  // iPhone対応の保存: Web Share API(写真に保存可) → a[download] → 別タブ の順で試す
-  // 注意: html2canvas 生成には数秒かかり、完了後に window.open/share を呼ぶと
-  // iOS の transient activation が切れてポップアップブロック/NotAllowedError になる。
-  // そのため exportElement 開始時点(タップ直後)で開いた placeholderWin を使い回す。
-  async function saveCanvas(canvas, filename, title, placeholderWin) {
+  // 保存: iOS はページ内プレビュー→手動操作、デスクトップ等は share → a[download]
+  // 注意: html2canvas 生成には数秒かかり、生成完了後に window.open/share を呼ぶと
+  // transient activation が切れてポップアップブロック/NotAllowedError になる。
+  // かつ生成開始時点で window.open("", "_blank") で先行オープンすると、iOS Safari は
+  // 新タブへ切り替えて元のページをバックグラウンド化し、生成自体が止まる・失敗する。
+  // そのため iOS ではタブを先行オープンせず、生成後にページ内プレビューを表示し、
+  // 「共有する」「別タブで開く」という fresh なタップで保存させる (tap 直後なので
+  // activation が有効で share/window.open が通る)。
+  async function saveCanvas(canvas, filename, title) {
     var blob = await canvasToBlob(canvas);
     var file = null;
     try {
@@ -171,44 +176,32 @@
       file = null;
     }
 
-    function closePlaceholder() {
-      try { if (placeholderWin && !placeholderWin.closed) placeholderWin.close(); } catch (e) {}
+    var blobUrl = URL.createObjectURL(blob);
+
+    // 1) iOS は download 属性が無視され、非同期後の window.open/share は通らないため
+    // 自動保存は試みず、ページ内に表示して長押し保存・手動共有に誘導する。
+    // (a[download] の click は現在ページを blob に置き換えて状態を破壊するため行わない)
+    if (isIOS()) {
+      return showInlinePreview(blob, blobUrl, filename);
     }
 
-    // 1) Web Share API (iPhone では共有シートから「写真に保存」等が選べる)
+    // 2) デスクトップ等: Web Share API を試す (activation 内なら共有シートが出る)
     try {
       if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: title || document.title });
-        closePlaceholder();
+        setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 10 * 1000);
         return { method: "share" };
       }
     } catch (e) {
       // ユーザーが共有シートをキャンセルした場合はエラーにしない
-      if (e && (e.name === "AbortError" || e.code === 20)) { closePlaceholder(); return { method: "share" }; }
+      if (e && (e.name === "AbortError" || e.code === 20)) {
+        setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 10 * 1000);
+        return { method: "share" };
+      }
       // 生成後の share は activation 切れの NotAllowedError が想定内 → 下のフォールバックへ
     }
 
-    var blobUrl = URL.createObjectURL(blob);
-
-    // 2) iOS は download 属性が無視され、非同期後の window.open はブロックされるため
-    // 事前 open した placeholder へ遷移させる。a[download] の click は行わない
-    // (二重遷移で元のページが blob に置き換わるのを防ぐ)。
-    if (isIOS()) {
-      if (placeholderWin && !placeholderWin.closed) {
-        try {
-          placeholderWin.location.href = blobUrl;
-          setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 60 * 1000);
-          return { method: "tab", url: blobUrl };
-        } catch (e) {
-          // placeholder への遷移に失敗したら下のページ内プレビューへ
-        }
-      }
-      // placeholder がブロックされた/閉じられた場合: ページ内に表示して長押し保存
-      closePlaceholder();
-      return showInlinePreview(blob, blobUrl, filename);
-    }
-
-    // 3) デスクトップ等: a[download] による保存 (DOMに追加してから click するのが iOS での必須条件)
+    // 3) デスクトップ等: a[download] による保存 (DOMに追加してから click する)
     try {
       var a = document.createElement("a");
       a.href = blobUrl;
@@ -222,7 +215,7 @@
       a.style.pointerEvents = "none";
       document.body.appendChild(a);
       a.click();
-      // 短時間 DOM に残してから除去 (iOS Safari が click を拾うため)
+      // 短時間 DOM に残してから除去
       await new Promise(function (r) { setTimeout(r, 500); });
       if (a.parentNode) a.parentNode.removeChild(a);
 
@@ -251,21 +244,10 @@
 
   async function exportElement(target, opts) {
     opts = opts || {};
-    // タップ直後に同期で placeholder を開く (非同期生成後に開くと iOS にブロックされるため)。
-    // 必ず最初の await より前で行うこと。
-    var placeholderWin = null;
-    var iosPre = isIOS();
-    if (iosPre) {
-      try {
-        placeholderWin = window.open("", "_blank");
-        // 空タブ放置に見えないよう生成中メッセージを入れる (失敗しても無視)
-        try {
-          if (placeholderWin && !placeholderWin.closed && placeholderWin.document) {
-            placeholderWin.document.write("<!doctype html><title>画像を生成しています…</title><p>画像を生成しています…</p>");
-          }
-        } catch (e) {}
-      } catch (e) { placeholderWin = null; }
-    }
+    // 注意: ここで window.open("", "_blank") を先行オープンしないこと。
+    // iOS Safari は新タブへ即切り替えして元のページをバックグラウンド化するため、
+    // 生成(数秒)が止まる・失敗し「一瞬タブが開いて閉じる」だけに終わる。
+    // iOS の保存は生成後のページ内プレビュー + 手動タップ(共有/別タブ)に任せる。
     await load();
     const targetEl = typeof target === "string" ? document.getElementById(target) : target;
     if (!targetEl) throw new Error("エクスポート対象が見つかりません");
@@ -473,13 +455,9 @@
         windowWidth: 900
       });
       var filename = opts.filename || ("pokemonsleep_" + todayStr() + ".png");
-      var saved = await saveCanvas(canvas, filename, opts.title || document.title, placeholderWin);
+      var saved = await saveCanvas(canvas, filename, opts.title || document.title);
       saved.filename = filename;
       return saved;
-    } catch (err) {
-      // 生成失敗時に空タブを残さない
-      try { if (placeholderWin && !placeholderWin.closed) placeholderWin.close(); } catch (e) {}
-      throw err;
     } finally {
       wrapper.remove();
     }
