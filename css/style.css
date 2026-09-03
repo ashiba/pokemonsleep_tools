@@ -806,6 +806,20 @@ main {
   color: #fff;
 }
 
+.mult-btn.close-btn {
+  border-radius: 6px;
+  background: #f0efea;
+  border-color: var(--border);
+  color: #8a857e;
+  padding: 2px 8px;
+}
+
+.mult-btn.close-btn:hover {
+  background: #e0dcd3;
+  border-color: #c5c0b5;
+  color: #5a5550;
+}
+
 .recipe-card .dish .name {
   font-weight: 600;
 }
@@ -905,8 +919,12 @@ main {
   max-width: 240px;
   accent-color: var(--accent);
   cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
   height: 36px;
-  padding: 6px 0;
+  padding: 0;
+  margin: 0;
   touch-action: pan-x;
 }
 .energy-controls input[type="range"]::-webkit-slider-runnable-track {

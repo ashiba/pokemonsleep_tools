@@ -658,9 +658,10 @@
       nameWrap.appendChild(catSpan);
       item.appendChild(nameWrap);
       const btnWrap = el("span", "mult-btns");
-      const b0 = el("button", "mult-btn", "×0");
+      const b0 = el("button", "mult-btn close-btn", "×");
       b0.type = "button";
       b0.setAttribute("aria-label", recipe.name + "の選択を解除");
+      b0.title = "選択を解除";
       b0.addEventListener("click", () => deselectRecipe(key));
       btnWrap.appendChild(b0);
       [1, 2, 3].forEach((m) => {
