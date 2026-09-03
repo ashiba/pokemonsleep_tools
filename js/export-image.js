@@ -366,8 +366,16 @@
           if (n === 0) sec.remove();
           else {
             secRemaining++;
+            // モバイルでは非アクティブタブの section に hidden が付いたまま
+            // clone されるため、画像では必ず解除する。
+            // (.cat-section[hidden]{display:none!important} により
+            // display="" だけでは表示されない。選択中のタブしか画像に
+            // 反映されない・個数モードのハイライトが消えて見える原因)
+            sec.hidden = false;
+            sec.removeAttribute("hidden");
             sec.style.display = "";
             sec.style.opacity = "1";
+            sec.style.visibility = "visible";
           }
         });
         if (secRemaining === 1) clone.style.gridTemplateColumns = "1fr";
