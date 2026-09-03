@@ -48,8 +48,121 @@
     });
   }
 
+  // ページ内に画像プレビューを表示するフォールバック
+  // (ポップアップブロック時でも確実に保存手段を提供する。長押し保存 + 共有リトライ)
+  function showInlinePreview(blob, blobUrl, filename) {
+    return new Promise(function (resolve) {
+      var overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.inset = "0";
+      overlay.style.zIndex = "9999";
+      overlay.style.background = "rgba(0,0,0,0.75)";
+      overlay.style.display = "flex";
+      overlay.style.alignItems = "center";
+      overlay.style.justifyContent = "center";
+      overlay.style.padding = "16px";
+      overlay.style.boxSizing = "border-box";
+
+      var panel = document.createElement("div");
+      panel.style.background = "#fff";
+      panel.style.borderRadius = "12px";
+      panel.style.maxWidth = "640px";
+      panel.style.width = "100%";
+      panel.style.maxHeight = "90vh";
+      panel.style.overflow = "auto";
+      panel.style.padding = "16px";
+      panel.style.textAlign = "center";
+      panel.style.color = "#3b3640";
+
+      var msg = document.createElement("p");
+      msg.style.fontSize = "14px";
+      msg.style.margin = "0 0 12px";
+      msg.textContent = "画像を生成しました。画像を長押しして「写真に保存」してください。";
+      panel.appendChild(msg);
+
+      var img = document.createElement("img");
+      img.src = blobUrl;
+      img.alt = filename;
+      img.style.maxWidth = "100%";
+      img.style.height = "auto";
+      img.style.border = "1px solid #e3ded3";
+      img.style.borderRadius = "8px";
+      panel.appendChild(img);
+
+      var btnRow = document.createElement("div");
+      btnRow.style.display = "flex";
+      btnRow.style.gap = "8px";
+      btnRow.style.justifyContent = "center";
+      btnRow.style.marginTop = "12px";
+      btnRow.style.flexWrap = "wrap";
+
+      // 新しいジェスチャーでの共有リトライ (ここでの tap は fresh な activation なので share が通る)
+      var shareBtn = document.createElement("button");
+      shareBtn.type = "button";
+      shareBtn.textContent = "共有する";
+      shareBtn.style.padding = "10px 18px";
+      shareBtn.style.fontSize = "15px";
+      shareBtn.style.borderRadius = "8px";
+      shareBtn.style.border = "1px solid #a98ce0";
+      shareBtn.style.background = "#a98ce0";
+      shareBtn.style.color = "#fff";
+      shareBtn.addEventListener("click", function () {
+        var file = null;
+        try { file = new File([blob], filename, { type: "image/png" }); } catch (e) { file = null; }
+        if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+          navigator.share({ files: [file], title: document.title }).catch(function () {});
+        } else if (navigator.share) {
+          navigator.share({ title: document.title, url: blobUrl }).catch(function () {});
+        }
+      });
+      btnRow.appendChild(shareBtn);
+
+      var tabLink = document.createElement("a");
+      tabLink.href = blobUrl;
+      tabLink.target = "_blank";
+      tabLink.rel = "noopener";
+      tabLink.textContent = "別タブで開く";
+      tabLink.style.display = "inline-block";
+      tabLink.style.padding = "10px 18px";
+      tabLink.style.fontSize = "15px";
+      tabLink.style.borderRadius = "8px";
+      tabLink.style.border = "1px solid #ccc";
+      tabLink.style.background = "#fff";
+      tabLink.style.color = "#3b3640";
+      tabLink.style.textDecoration = "none";
+      btnRow.appendChild(tabLink);
+
+      var closeBtn = document.createElement("button");
+      closeBtn.type = "button";
+      closeBtn.textContent = "閉じる";
+      closeBtn.style.padding = "10px 18px";
+      closeBtn.style.fontSize = "15px";
+      closeBtn.style.borderRadius = "8px";
+      closeBtn.style.border = "1px solid #ccc";
+      closeBtn.style.background = "#fff";
+      closeBtn.style.color = "#3b3640";
+      closeBtn.addEventListener("click", function () {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 1000);
+      });
+      btnRow.appendChild(closeBtn);
+      panel.appendChild(btnRow);
+
+      overlay.appendChild(panel);
+      // 背景タップで閉じる (パネル内のタップは閉じない)
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) closeBtn.click();
+      });
+      document.body.appendChild(overlay);
+      resolve({ method: "preview", url: blobUrl });
+    });
+  }
+
   // iPhone対応の保存: Web Share API(写真に保存可) → a[download] → 別タブ の順で試す
-  async function saveCanvas(canvas, filename, title) {
+  // 注意: html2canvas 生成には数秒かかり、完了後に window.open/share を呼ぶと
+  // iOS の transient activation が切れてポップアップブロック/NotAllowedError になる。
+  // そのため exportElement 開始時点(タップ直後)で開いた placeholderWin を使い回す。
+  async function saveCanvas(canvas, filename, title, placeholderWin) {
     var blob = await canvasToBlob(canvas);
     var file = null;
     try {
@@ -58,20 +171,44 @@
       file = null;
     }
 
+    function closePlaceholder() {
+      try { if (placeholderWin && !placeholderWin.closed) placeholderWin.close(); } catch (e) {}
+    }
+
     // 1) Web Share API (iPhone では共有シートから「写真に保存」等が選べる)
     try {
       if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: title || document.title });
+        closePlaceholder();
         return { method: "share" };
       }
     } catch (e) {
       // ユーザーが共有シートをキャンセルした場合はエラーにしない
-      if (e && (e.name === "AbortError" || e.code === 20)) return { method: "share" };
-      // share失敗時は download/別タブへフォールバックする
+      if (e && (e.name === "AbortError" || e.code === 20)) { closePlaceholder(); return { method: "share" }; }
+      // 生成後の share は activation 切れの NotAllowedError が想定内 → 下のフォールバックへ
     }
 
-    // 2) a[download] による保存 (DOMに追加してから click するのが iOS での必須条件)
     var blobUrl = URL.createObjectURL(blob);
+
+    // 2) iOS は download 属性が無視され、非同期後の window.open はブロックされるため
+    // 事前 open した placeholder へ遷移させる。a[download] の click は行わない
+    // (二重遷移で元のページが blob に置き換わるのを防ぐ)。
+    if (isIOS()) {
+      if (placeholderWin && !placeholderWin.closed) {
+        try {
+          placeholderWin.location.href = blobUrl;
+          setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 60 * 1000);
+          return { method: "tab", url: blobUrl };
+        } catch (e) {
+          // placeholder への遷移に失敗したら下のページ内プレビューへ
+        }
+      }
+      // placeholder がブロックされた/閉じられた場合: ページ内に表示して長押し保存
+      closePlaceholder();
+      return showInlinePreview(blob, blobUrl, filename);
+    }
+
+    // 3) デスクトップ等: a[download] による保存 (DOMに追加してから click するのが iOS での必須条件)
     try {
       var a = document.createElement("a");
       a.href = blobUrl;
@@ -89,14 +226,6 @@
       await new Promise(function (r) { setTimeout(r, 500); });
       if (a.parentNode) a.parentNode.removeChild(a);
 
-      // 3) iOS で download 属性が無視される場合のフォールバック: 別タブで開く
-      // download が効いたかどうかは検知できないため、iOS では共有不可だった場合のみ別タブを開く
-      if (isIOS()) {
-        window.open(blobUrl, "_blank");
-        // blob URL は開いたタブが参照するため少し遅らせて解放する
-        setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 60 * 1000);
-        return { method: "tab", url: blobUrl };
-      }
       setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 10 * 1000);
       return { method: "download" };
     } catch (e) {
@@ -122,6 +251,21 @@
 
   async function exportElement(target, opts) {
     opts = opts || {};
+    // タップ直後に同期で placeholder を開く (非同期生成後に開くと iOS にブロックされるため)。
+    // 必ず最初の await より前で行うこと。
+    var placeholderWin = null;
+    var iosPre = isIOS();
+    if (iosPre) {
+      try {
+        placeholderWin = window.open("", "_blank");
+        // 空タブ放置に見えないよう生成中メッセージを入れる (失敗しても無視)
+        try {
+          if (placeholderWin && !placeholderWin.closed && placeholderWin.document) {
+            placeholderWin.document.write("<!doctype html><title>画像を生成しています…</title><p>画像を生成しています…</p>");
+          }
+        } catch (e) {}
+      } catch (e) { placeholderWin = null; }
+    }
     await load();
     const targetEl = typeof target === "string" ? document.getElementById(target) : target;
     if (!targetEl) throw new Error("エクスポート対象が見つかりません");
@@ -318,7 +462,7 @@
         if (h > 0) {
           var maxArea = isIOS() ? 12000000 : 24000000;
           var area = 900 * scale * (h * scale);
-          if (area > maxArea) scale = Math.max(1, Math.sqrt(maxArea / (900 * h)));
+          if (area > maxArea) scale = Math.max(0.4, Math.sqrt(maxArea / (900 * h)));
         }
       } catch (e) { /* 計算失敗時は既定 scale のまま */ }
       const canvas = await window.html2canvas(wrapper, {
@@ -329,9 +473,13 @@
         windowWidth: 900
       });
       var filename = opts.filename || ("pokemonsleep_" + todayStr() + ".png");
-      var saved = await saveCanvas(canvas, filename, opts.title || document.title);
+      var saved = await saveCanvas(canvas, filename, opts.title || document.title, placeholderWin);
       saved.filename = filename;
       return saved;
+    } catch (err) {
+      // 生成失敗時に空タブを残さない
+      try { if (placeholderWin && !placeholderWin.closed) placeholderWin.close(); } catch (e) {}
+      throw err;
     } finally {
       wrapper.remove();
     }
