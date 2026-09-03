@@ -378,6 +378,67 @@
             sec.style.visibility = "visible";
           }
         });
+        // 原文DOMのハイライト状態をクローンへ同期する。
+        // (個数モードの「作れる」緑枠・ok/missチップ・×N食バッジが、
+        // 端末やタイミングによらず画像に反映されるようにするため。
+        // cloneNode の複写に加え、iOS の html2canvas でも確実に描画
+        // されるようインラインスタイルで補強する)
+        try {
+          var origMap = {};
+          if (origRecipesEl) {
+            origRecipesEl.querySelectorAll(".recipe-card").forEach(function (c) {
+              origMap[c.dataset.cat + ":" + c.dataset.ridx] = c;
+            });
+          }
+          clone.querySelectorAll(".recipe-card").forEach(function (card) {
+            var orig = origMap[card.dataset.cat + ":" + card.dataset.ridx];
+            if (!orig) return;
+            card.className = orig.className;
+            if (orig.classList.contains("creatable")) {
+              card.style.borderColor = "#4c9e63";
+              card.style.background = "#f0f9f0";
+            }
+            if (orig.classList.contains("selected")) {
+              // 原文CSSの定義順 (.selected が後勝ち) に合わせる
+              card.style.borderColor = "#7aa5c4";
+              card.style.background = "#f0f6ff";
+            }
+            var origChips = {};
+            orig.querySelectorAll(".ing-chip").forEach(function (oc) {
+              origChips[oc.dataset.name] = oc;
+            });
+            card.querySelectorAll(".ing-chip").forEach(function (chip) {
+              var oc = origChips[chip.dataset.name];
+              if (!oc) return;
+              chip.className = oc.className;
+              if (oc.classList.contains("ok")) {
+                chip.style.background = "#d7f2de";
+                chip.style.color = "#2f7a5f";
+                chip.style.border = "1px solid #8cc9a0";
+                chip.style.fontWeight = "700";
+              } else if (oc.classList.contains("miss")) {
+                chip.style.background = "#ececec";
+                chip.style.color = "#9a9a9a";
+                chip.style.border = "1px dashed #c5c5c5";
+              }
+            });
+            var origBadge = orig.querySelector(".servings-badge");
+            var badge = card.querySelector(".servings-badge");
+            if (origBadge && badge) {
+              badge.hidden = origBadge.hidden;
+              badge.textContent = origBadge.textContent;
+              badge.className = origBadge.className;
+              if (!origBadge.hidden) {
+                badge.style.display = "inline-block";
+                badge.style.background = "#ffec8a";
+                badge.style.color = "#7a4a00";
+                badge.style.border = "1px solid #e6b84a";
+              } else {
+                badge.style.display = "none";
+              }
+            }
+          });
+        } catch (e) { /* 同期失敗時はクローンのまま続行 */ }
         if (secRemaining === 1) clone.style.gridTemplateColumns = "1fr";
         else if (secRemaining === 2) clone.style.gridTemplateColumns = "repeat(2,1fr)";
         else clone.style.gridTemplateColumns = "repeat(3,1fr)";
