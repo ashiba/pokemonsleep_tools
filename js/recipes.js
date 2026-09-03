@@ -1032,9 +1032,7 @@
         }
         if (window.PokemonExport && window.PokemonExport.exportElement) {
           var result = await window.PokemonExport.exportElement("recipes", { title: title, subtitle: subtitle, metaText: meta, filename: filename });
-          if (result && result.method === "share") setRecipesExportStatus("共有シートを開きました。「写真に保存」等を選んで保存してください", "ok");
-          else if (result && result.method === "tab") setRecipesExportStatus("別タブで画像を開きました。画像を長押しして保存してください: " + filename, "ok");
-          else if (result && result.method === "preview") setRecipesExportStatus("画像を表示しました。長押しで保存、または「共有する」をお使いください", "ok");
+          if (result && result.method === "preview") setRecipesExportStatus("画像を表示しました。長押しで保存、または「共有する」をお使いください", "ok");
           else setRecipesExportStatus("画像を保存しました: " + filename, "ok");
         } else {
           throw new Error("エクスポート機能の読み込みに失敗しました");

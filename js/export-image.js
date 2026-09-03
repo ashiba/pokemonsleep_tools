@@ -159,7 +159,9 @@
     });
   }
 
-  // 保存: iOS はページ内プレビュー→手動操作、デスクトップ等は share → a[download]
+  // 保存: iOS はページ内プレビュー→手動操作、PC等は直接ダウンロード。
+  // PCで共有シートを自動表示すると混乱するため、Web Share API の自動呼び出しは行わない。
+  // (プレビュー内の「共有する」ボタンはユーザーの明示タップなので残す)
   // 注意: html2canvas 生成には数秒かかり、生成完了後に window.open/share を呼ぶと
   // transient activation が切れてポップアップブロック/NotAllowedError になる。
   // かつ生成開始時点で window.open("", "_blank") で先行オープンすると、iOS Safari は
@@ -169,12 +171,6 @@
   // activation が有効で share/window.open が通る)。
   async function saveCanvas(canvas, filename, title) {
     var blob = await canvasToBlob(canvas);
-    var file = null;
-    try {
-      file = new File([blob], filename, { type: "image/png" });
-    } catch (e) {
-      file = null;
-    }
 
     var blobUrl = URL.createObjectURL(blob);
 
@@ -185,23 +181,7 @@
       return showInlinePreview(blob, blobUrl, filename);
     }
 
-    // 2) デスクトップ等: Web Share API を試す (activation 内なら共有シートが出る)
-    try {
-      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: title || document.title });
-        setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 10 * 1000);
-        return { method: "share" };
-      }
-    } catch (e) {
-      // ユーザーが共有シートをキャンセルした場合はエラーにしない
-      if (e && (e.name === "AbortError" || e.code === 20)) {
-        setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 10 * 1000);
-        return { method: "share" };
-      }
-      // 生成後の share は activation 切れの NotAllowedError が想定内 → 下のフォールバックへ
-    }
-
-    // 3) デスクトップ等: a[download] による保存 (DOMに追加してから click する)
+    // 2) PC等: a[download] による直接保存 (共有シートは出さない)
     try {
       var a = document.createElement("a");
       a.href = blobUrl;
@@ -555,28 +535,6 @@
         clone.appendChild(note);
       }
     }
-    // search: #results は縦並びのまま
-    if (targetEl.id === "results") {
-      clone.style.display = "block";
-      // 結果が多すぎると画像が巨大になり保存に失敗するため上位20件に絞る
-      var cards = clone.querySelectorAll(".result-card");
-      if (cards.length > 20) {
-        for (var i = 20; i < cards.length; i++) cards[i].remove();
-        var note = document.createElement("div");
-        note.style.fontSize = "11px";
-        note.style.color = "#6b6570";
-        note.style.textAlign = "center";
-        note.style.marginTop = "8px";
-        note.style.background = "#fff";
-        note.style.border = "1px dashed #e3ded3";
-        note.style.borderRadius = "8px";
-        note.style.padding = "6px 10px";
-        var total = targetEl.querySelectorAll(".result-card").length;
-        note.textContent = "\u203B \u5168" + total + "\u4EF6\u4E2D \u4E0A\u4F4D20\u4EF6\u306E\u307F\u8868\u793A";
-        clone.appendChild(note);
-      }
-    }
-
     wrapper.appendChild(clone);
 
     const foot = document.createElement("div");
