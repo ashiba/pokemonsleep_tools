@@ -18,6 +18,93 @@
     return loading;
   }
 
+  function isIOS() {
+    var ua = navigator.userAgent || "";
+    var platform = navigator.platform || "";
+    if (/iPad|iPhone|iPod/.test(ua)) return true;
+    // iPadOS 13+ は Mac として振る舞うためタッチ点で判定
+    if (platform === "MacIntel" && navigator.maxTouchPoints > 1) return true;
+    return false;
+  }
+
+  function canvasToBlob(canvas) {
+    return new Promise(function (resolve, reject) {
+      if (canvas.toBlob) {
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob);
+          else reject(new Error("画像の生成に失敗しました"));
+        }, "image/png");
+      } else {
+        // toBlob 未対応のフォールバック (旧ブラウザ)
+        try {
+          var bin = atob(canvas.toDataURL("image/png").split(",")[1]);
+          var arr = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          resolve(new Blob([arr], { type: "image/png" }));
+        } catch (e) {
+          reject(new Error("画像の生成に失敗しました"));
+        }
+      }
+    });
+  }
+
+  // iPhone対応の保存: Web Share API(写真に保存可) → a[download] → 別タブ の順で試す
+  async function saveCanvas(canvas, filename, title) {
+    var blob = await canvasToBlob(canvas);
+    var file = null;
+    try {
+      file = new File([blob], filename, { type: "image/png" });
+    } catch (e) {
+      file = null;
+    }
+
+    // 1) Web Share API (iPhone では共有シートから「写真に保存」等が選べる)
+    try {
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: title || document.title });
+        return { method: "share" };
+      }
+    } catch (e) {
+      // ユーザーが共有シートをキャンセルした場合はエラーにしない
+      if (e && (e.name === "AbortError" || e.code === 20)) return { method: "share" };
+      // share失敗時は download/別タブへフォールバックする
+    }
+
+    // 2) a[download] による保存 (DOMに追加してから click するのが iOS での必須条件)
+    var blobUrl = URL.createObjectURL(blob);
+    try {
+      var a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      a.rel = "noopener";
+      // iOS で click を有効にするため可視状態で一瞬だけ DOM に追加
+      a.style.position = "fixed";
+      a.style.left = "0";
+      a.style.top = "0";
+      a.style.opacity = "0";
+      a.style.pointerEvents = "none";
+      document.body.appendChild(a);
+      a.click();
+      // 短時間 DOM に残してから除去 (iOS Safari が click を拾うため)
+      await new Promise(function (r) { setTimeout(r, 500); });
+      if (a.parentNode) a.parentNode.removeChild(a);
+
+      // 3) iOS で download 属性が無視される場合のフォールバック: 別タブで開く
+      // download が効いたかどうかは検知できないため、iOS では共有不可だった場合のみ別タブを開く
+      if (isIOS()) {
+        window.open(blobUrl, "_blank");
+        // blob URL は開いたタブが参照するため少し遅らせて解放する
+        setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 60 * 1000);
+        return { method: "tab", url: blobUrl };
+      }
+      setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 10 * 1000);
+      return { method: "download" };
+    } catch (e) {
+      setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 10 * 1000);
+      throw e;
+    }
+  }
+
   function todayStr() {
     return timestampStr().slice(0, 10);
   }
@@ -223,20 +310,28 @@
 
     document.body.appendChild(wrapper);
     try {
+      // iOS は canvas メモリ上限が厳しいため scale を抑える(大きすぎると真っ白/失敗になる)
+      var scale = isIOS() ? 1 : 2;
+      try {
+        var h = wrapper.getBoundingClientRect().height || wrapper.offsetHeight || 0;
+        // 面積が iOS の上限(~1670万px)に収まるよう scale を下げる
+        if (h > 0) {
+          var maxArea = isIOS() ? 12000000 : 24000000;
+          var area = 900 * scale * (h * scale);
+          if (area > maxArea) scale = Math.max(1, Math.sqrt(maxArea / (900 * h)));
+        }
+      } catch (e) { /* 計算失敗時は既定 scale のまま */ }
       const canvas = await window.html2canvas(wrapper, {
-        scale: 2,
+        scale: scale,
         backgroundColor: "#f6f4ee",
         useCORS: true,
         logging: false,
         windowWidth: 900
       });
-      const a = document.createElement("a");
-      a.href = canvas.toDataURL("image/png");
-      a.download = opts.filename || ("pokemonsleep_" + todayStr() + ".png");
-      // iOS Safari 等で click が無効な場合のフォールバック: 新タブで開く
-      a.click();
-      // 一部ブラウザで click だけでは保存されないため、URLを返す（呼び出し側で表示も可能）
-      return canvas.toDataURL("image/png");
+      var filename = opts.filename || ("pokemonsleep_" + todayStr() + ".png");
+      var saved = await saveCanvas(canvas, filename, opts.title || document.title);
+      saved.filename = filename;
+      return saved;
     } finally {
       wrapper.remove();
     }
