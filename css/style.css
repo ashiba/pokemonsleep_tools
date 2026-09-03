@@ -238,6 +238,13 @@ main {
   font-size: 1.1rem;
 }
 
+.results-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .export-btn {
   display: inline-flex;
   align-items: center;
@@ -915,6 +922,7 @@ main {
 .energy-controls input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
+  box-sizing: border-box;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -925,6 +933,7 @@ main {
   cursor: pointer;
 }
 .energy-controls input[type="range"]::-moz-range-thumb {
+  box-sizing: border-box;
   width: 28px;
   height: 28px;
   border-radius: 50%;

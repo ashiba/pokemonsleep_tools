@@ -36,6 +36,7 @@
 
   const MOBILE_MAX = 900;
   const TAB_ALL = "all";
+  const LOW_THRESHOLD = 42;
   const state = {
     ingredients: [],
     categories: {},
@@ -46,7 +47,8 @@
     selected: new Map(),
     level: 1,
     fb: 0,
-    activeTab: null
+    activeTab: null,
+    hideLow: true
   };
 
   function isMobile() {
@@ -116,6 +118,24 @@
     apply();
   }
 
+  function deselectRecipe(key) {
+    if (!state.selected.has(key)) return;
+    state.selected.delete(key);
+    if (els.recipes) {
+      const list = els.recipes.querySelectorAll('input[data-key]');
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].getAttribute("data-key") === key) {
+          list[i].checked = false;
+          const card = list[i].closest ? list[i].closest(".recipe-card") : null;
+          if (card) card.classList.remove("selected");
+          break;
+        }
+      }
+    }
+    updateSelectedSummary();
+    apply();
+  }
+
   function calcServings(recipe, base) {
     let min = Infinity;
     for (const ing of recipe.ingredients) {
@@ -176,7 +196,8 @@
     levelMult: $("level-mult"),
     fbVal: $("fb-val"),
     exportBtn: $("export-recipes-image"),
-    exportStatus: $("export-recipes-status")
+    exportStatus: $("export-recipes-status"),
+    toggleLow: $("toggle-low")
   };
 
   function initEnergyControls() {
@@ -251,6 +272,26 @@
     btn.classList.toggle("on", visible);
     st.textContent = visible ? "ON" : "OFF";
     applyTabVisibility();
+  }
+
+  function applyLowFilter() {
+    if (!els.recipes) return;
+    for (const key of Object.keys(state.categories)) {
+      const recipes = state.categories[key].recipes;
+      els.recipes.querySelectorAll('.recipe-card[data-cat="' + key + '"]').forEach((card) => {
+        const recipe = recipes[+card.dataset.ridx];
+        if (!recipe) return;
+        const isLow = recipe.totalCount < LOW_THRESHOLD;
+        card.style.display = (state.hideLow && isLow) ? "none" : "";
+      });
+    }
+  }
+
+  function updateLowFilterButton() {
+    if (!els.toggleLow) return;
+    els.toggleLow.classList.toggle("on", state.hideLow);
+    const st = els.toggleLow.querySelector(".st");
+    if (st) st.textContent = state.hideLow ? "ON" : "OFF";
   }
 
   function buildTabs() {
@@ -477,6 +518,7 @@
       frag.appendChild(section);
     }
     els.recipes.appendChild(frag);
+    applyLowFilter();
   }
 
   function getReserveCounts() {
@@ -616,6 +658,11 @@
       nameWrap.appendChild(catSpan);
       item.appendChild(nameWrap);
       const btnWrap = el("span", "mult-btns");
+      const b0 = el("button", "mult-btn", "×0");
+      b0.type = "button";
+      b0.setAttribute("aria-label", recipe.name + "の選択を解除");
+      b0.addEventListener("click", () => deselectRecipe(key));
+      btnWrap.appendChild(b0);
       [1, 2, 3].forEach((m) => {
         const b = el("button", "mult-btn" + (mult === m ? " on" : ""), "×" + m);
         b.type = "button";
@@ -795,6 +842,14 @@
   if (els.useRemaining) {
     els.useRemaining.addEventListener("change", () => {
       apply();
+    });
+  }
+
+  if (els.toggleLow) {
+    els.toggleLow.addEventListener("click", () => {
+      state.hideLow = !state.hideLow;
+      updateLowFilterButton();
+      applyLowFilter();
     });
   }
 
