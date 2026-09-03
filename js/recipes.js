@@ -995,6 +995,9 @@
     els.exportBtn.addEventListener("click", async function () {
       if (state.selected.size === 0) {
         setRecipesExportStatus("レシピにチェックを入れてから実行してください（選択中のレシピが0件です）", "err");
+        if (els.exportStatus && els.exportStatus.scrollIntoView) {
+          els.exportStatus.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
         return;
       }
       var orig = els.exportBtn.textContent;
@@ -1007,8 +1010,9 @@
         var subtitle = "チェックを入れたレシピのみを抽出";
         var meta = buildRecipesExportMeta();
         if (window.PokemonExport && window.PokemonExport.exportElement) {
-          await window.PokemonExport.exportElement("recipes", { title: title, subtitle: subtitle, metaText: meta, filename: filename });
-          setRecipesExportStatus("画像を保存しました: " + filename, "ok");
+          var result = await window.PokemonExport.exportElement("recipes", { title: title, subtitle: subtitle, metaText: meta, filename: filename });
+          if (result && result.method === "preview") setRecipesExportStatus("画像を表示しました。長押しで保存、または「共有する」をお使いください", "ok");
+          else setRecipesExportStatus("画像を保存しました: " + filename, "ok");
         } else {
           throw new Error("エクスポート機能の読み込みに失敗しました");
         }

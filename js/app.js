@@ -124,9 +124,7 @@
     fbSlider: $("field-bonus"),
     levelVal: $("level-val"),
     levelMult: $("level-mult"),
-    fbVal: $("fb-val"),
-    exportBtn: $("export-image"),
-    exportStatus: $("export-status")
+    fbVal: $("fb-val")
   };
 
   function initEnergyControls() {
@@ -308,36 +306,9 @@
     render(hits);
   }
 
-  function buildExportMeta() {
-    var lvMult = formatLevelMult(state.level);
-    var lvTxt = "Lv" + state.level + (lvMult ? "(" + lvMult + ")" : "");
-    var dt = new Date().toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-    return lvTxt + "  \u00b7  FB" + state.fb + "%  \u00b7  " + dt + " 出力";
-  }
-
-  function setExportEnabled(enabled) {
-    if (!els.exportBtn) return;
-    els.exportBtn.disabled = !enabled;
-  }
-
- function setExportStatus(msg, kind) {
-    if (!els.exportStatus) return;
-    if (!msg) {
-      els.exportStatus.hidden = true;
-      els.exportStatus.textContent = "";
-      els.exportStatus.className = "export-status";
-      return;
-    }
-    els.exportStatus.hidden = false;
-    els.exportStatus.textContent = msg;
-    els.exportStatus.className = "export-status " + (kind || "");
-  }
-
   function render(hits) {
     els.count.textContent = hits.length + "件";
     els.results.innerHTML = "";
-    setExportEnabled(hits.length > 0);
-    setExportStatus("", "");
 
     if (hits.length === 0) {
       els.results.appendChild(el("div", "empty", "条件に合う組み合わせがありません"));
@@ -399,37 +370,6 @@ els.filterEnergy.addEventListener("change", () => {
   els.minRatio.disabled = useEnergy;
   els.minEnergy.disabled = !useEnergy;
 });
-
-  if (els.exportBtn) {
-    els.exportBtn.addEventListener("click", async () => {
-      if (!state.lastHits || state.lastHits.length === 0) {
-        setExportStatus("エクスポートする結果がありません。先に検索してください。", "err");
-        return;
-      }
-      var origText = els.exportBtn.textContent;
-      els.exportBtn.disabled = true;
-      els.exportBtn.textContent = "生成中...";
-      setExportStatus("画像を生成しています...", "ok");
-      try {
-        var filename = "pokemonsleep_search_" + (window.PokemonExport ? window.PokemonExport.timestampStr() : new Date().toISOString().replace(/[-:]/g, "").slice(0,15)) + ".png";
-        var title = "ポケモンスリープ 料理サーチ 結果 (" + state.lastHits.length + "件)";
-        var meta = buildExportMeta();
-        // 上位20件のみを画像に含める旨をサブタイトルで示す
-        var subtitle = state.lastHits.length > 20 ? "上位20件を表示（全" + state.lastHits.length + "件中）" : "";
-        if (window.PokemonExport && window.PokemonExport.exportElement) {
-          await window.PokemonExport.exportElement("results", { title: title, subtitle: subtitle, metaText: meta, filename: filename });
-          setExportStatus("画像を保存しました: " + filename, "ok");
-        } else {
-          throw new Error("エクスポート機能の読み込みに失敗しました");
-        }
-      } catch (e) {
-        setExportStatus(e.message || String(e), "err");
-      } finally {
-        els.exportBtn.textContent = origText;
-        els.exportBtn.disabled = false;
-      }
-    });
-  }
 
   loadData().catch((err) => {
     els.results.innerHTML = '<div class="loading">データの読み込みに失敗しました: ' + err.message + "</div>";
