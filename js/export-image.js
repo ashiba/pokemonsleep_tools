@@ -242,6 +242,89 @@
     return y + "-" + m + "-" + day + "_" + hh + mm + ss;
   }
 
+  // html2canvas@1.4.1 が解釈できるのは rgb()/rgba()/hsl()/hsla()/hex/名前色のみで、
+  // color()/lab()/oklch()/color-mix()/light-dark() 等の計算値に遭遇すると
+  // 'Attempting to parse an unsupported color function "..."' で画像生成自体が失敗する。
+  // 自前の CSS には使っていなくても、端末 (特に Safari) の UA スタイル由来の計算値が
+  // 混ざることがある。個数モードでは確保パネル・×N食バッジ等の付加要素が画像に
+  // 含まれるため当たりやすい。非対応関数を含む計算値だけを安全な値で上書きする
+  // (対応済みの rgb() 等には一切触らないため見た目は変わらない)。
+  // なお html2canvas は複製先 iframe 内の要素を「元の window の getComputedStyle」で
+  // 解析するため、複製側は iframe の view と元 window の両方で検査する。
+  var UNSUPPORTED_COLOR_FN_RE = /(color\(|color-mix\(|lab\(|lch\(|oklab\(|oklch\(|hwb\(|light-dark\()/i;
+  var SANITIZE_BORDER_PROPS = [
+    "border-top-color", "border-right-color", "border-bottom-color", "border-left-color",
+    "outline-color", "text-decoration-color", "-webkit-text-stroke-color"
+  ];
+
+  function sanitizeExportColorsWith(root, getCS) {
+    var els = [root];
+    try {
+      var list = root.querySelectorAll("*");
+      for (var i = 0; i < list.length; i++) els.push(list[i]);
+    } catch (e) { /* querySelectorAll 失敗時は root のみ */ }
+    for (var n = 0; n < els.length; n++) {
+      var target = els[n];
+      var cs = null;
+      try { cs = getCS(target); } catch (e) { continue; }
+      if (!cs) continue;
+      try {
+        var v = null;
+        // 文字色を先に確定させる (border 系は CSS 既定の currentColor 扱いに合わせる)
+        var textFallback = "#3b3640";
+        try {
+          v = cs.getPropertyValue("color") || "";
+          if (v && UNSUPPORTED_COLOR_FN_RE.test(v)) target.style.setProperty("color", textFallback);
+        } catch (e) {}
+        try {
+          v = cs.getPropertyValue("background-color") || "";
+          if (v && UNSUPPORTED_COLOR_FN_RE.test(v)) target.style.setProperty("background-color", "transparent");
+        } catch (e) {}
+        for (var k = 0; k < SANITIZE_BORDER_PROPS.length; k++) {
+          try {
+            v = cs.getPropertyValue(SANITIZE_BORDER_PROPS[k]) || "";
+            if (v && UNSUPPORTED_COLOR_FN_RE.test(v)) target.style.setProperty(SANITIZE_BORDER_PROPS[k], textFallback);
+          } catch (e) {}
+        }
+        try {
+          v = cs.getPropertyValue("background-image") || "";
+          if (v && UNSUPPORTED_COLOR_FN_RE.test(v)) target.style.setProperty("background-image", "none");
+        } catch (e) {}
+        try {
+          v = cs.getPropertyValue("box-shadow") || "";
+          if (v && v !== "none" && UNSUPPORTED_COLOR_FN_RE.test(v)) target.style.setProperty("box-shadow", "none");
+        } catch (e) {}
+        try {
+          v = cs.getPropertyValue("text-shadow") || "";
+          if (v && v !== "none" && UNSUPPORTED_COLOR_FN_RE.test(v)) target.style.setProperty("text-shadow", "none");
+        } catch (e) {}
+      } catch (e) { /* この要素は諦めて次へ */ }
+    }
+  }
+
+  function sanitizeExportColors(root, view) {
+    try {
+      if (!root) return;
+      var views = [];
+      if (view && view.getComputedStyle) views.push(view);
+      try {
+        var od = root.ownerDocument;
+        var odv = (od && od.defaultView) ? od.defaultView : null;
+        if (odv && odv.getComputedStyle && views.indexOf(odv) === -1) views.push(odv);
+      } catch (e) {}
+      // 解析に使う元 window の view があればそれでも検査する
+      try {
+        if (window && window.getComputedStyle && views.indexOf(window) === -1) views.push(window);
+      } catch (e) {}
+      if (views.length === 0) return;
+      for (var i = 0; i < views.length; i++) {
+        (function (w) {
+          sanitizeExportColorsWith(root, function (el) { return w.getComputedStyle(el); });
+        })(views[i]);
+      }
+    } catch (e) { /* サニタイズ失敗時はそのまま続行 */ }
+  }
+
   async function exportElement(target, opts) {
     opts = opts || {};
     // 注意: ここで window.open("", "_blank") を先行オープンしないこと。
@@ -254,6 +337,7 @@
 
     // オフスクリーンラッパー（ビューポート幅に依存しない固定幅で描画 → モバイルでも崩れない）
     const wrapper = document.createElement("div");
+    wrapper.id = "__pokemon_export_wrapper";
     wrapper.style.position = "fixed";
     wrapper.style.left = "-10000px";
     wrapper.style.top = "0";
@@ -504,6 +588,9 @@
     wrapper.appendChild(foot);
 
     document.body.appendChild(wrapper);
+    // 非対応の色関数 (color()/oklch() 等) が計算値に混ざると html2canvas が例外で
+    // 落ちるため、実DOM側・複製側の両方でサニタイズする (詳細は sanitizeExportColors)。
+    sanitizeExportColors(wrapper, window);
     try {
       // iOS は canvas メモリ上限が厳しいため scale を抑える(大きすぎると真っ白/失敗になる)
       var scale = isIOS() ? 1 : 2;
@@ -521,7 +608,14 @@
         backgroundColor: "#f6f4ee",
         useCORS: true,
         logging: false,
-        windowWidth: 900
+        windowWidth: 900,
+        onclone: function (clonedDoc) {
+          try {
+            var w = null;
+            try { w = clonedDoc.getElementById("__pokemon_export_wrapper"); } catch (e) { w = null; }
+            sanitizeExportColors(w || clonedDoc.body, (clonedDoc && clonedDoc.defaultView) || window);
+          } catch (e) { /* サニタイズ失敗時はそのまま続行 */ }
+        }
       });
       var filename = opts.filename || ("pokemonsleep_" + todayStr() + ".png");
       var saved = await saveCanvas(canvas, filename, opts.title || document.title);
