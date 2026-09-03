@@ -812,6 +812,7 @@ main {
   border-color: var(--border);
   color: #8a857e;
   padding: 2px 8px;
+  margin-right: 24px;
 }
 
 .mult-btn.close-btn:hover {
