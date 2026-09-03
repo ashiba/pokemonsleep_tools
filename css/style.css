@@ -259,9 +259,15 @@ main {
   color: #fff;
 }
 
-.export-btn:disabled {
+.export-btn:disabled,
+.export-btn.is-disabled {
   opacity: 0.45;
   cursor: not-allowed;
+  background: #fff;
+  color: var(--accent-dark);
+}
+
+.export-btn.is-disabled:hover {
   background: #fff;
   color: var(--accent-dark);
 }

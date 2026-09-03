@@ -172,6 +172,8 @@
     renderHlList();
     initEnergyControls();
     els.search.disabled = false;
+    // 未検索でもクリック時に案内メッセージを出せるよう有効化しておく
+    setExportEnabled(false);
   }
 
   function renderNgList() {
@@ -317,7 +319,11 @@
 
   function setExportEnabled(enabled) {
     if (!els.exportBtn) return;
-    els.exportBtn.disabled = !enabled;
+    // disabled にすると click が発火せずメッセージを表示できないため、
+    // 無効状態でもクリック可能にし、見た目だけ無効化する
+    els.exportBtn.disabled = false;
+    els.exportBtn.setAttribute("aria-disabled", enabled ? "false" : "true");
+    els.exportBtn.classList.toggle("is-disabled", !enabled);
   }
 
  function setExportStatus(msg, kind) {
@@ -402,8 +408,12 @@ els.filterEnergy.addEventListener("change", () => {
 
   if (els.exportBtn) {
     els.exportBtn.addEventListener("click", async () => {
-      if (!state.lastHits || state.lastHits.length === 0) {
-        setExportStatus("エクスポートする結果がありません。先に検索してください。", "err");
+      if (!state.lastHits) {
+        setExportStatus("先に検索を実行してください。", "err");
+        return;
+      }
+      if (state.lastHits.length === 0) {
+        setExportStatus("条件に合う組み合わせがありません。条件を緩めて再検索してください。", "err");
         return;
       }
       var origText = els.exportBtn.textContent;
