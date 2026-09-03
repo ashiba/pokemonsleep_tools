@@ -1011,6 +1011,9 @@
     els.exportBtn.addEventListener("click", async function () {
       if (state.selected.size === 0) {
         setRecipesExportStatus("レシピにチェックを入れてから実行してください（選択中のレシピが0件です）", "err");
+        if (els.exportStatus && els.exportStatus.scrollIntoView) {
+          els.exportStatus.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
         return;
       }
       var orig = els.exportBtn.textContent;

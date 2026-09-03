@@ -410,10 +410,16 @@ els.filterEnergy.addEventListener("change", () => {
     els.exportBtn.addEventListener("click", async () => {
       if (!state.lastHits) {
         setExportStatus("先に検索を実行してください。", "err");
+        if (els.exportStatus && els.exportStatus.scrollIntoView) {
+          els.exportStatus.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
         return;
       }
       if (state.lastHits.length === 0) {
         setExportStatus("条件に合う組み合わせがありません。条件を緩めて再検索してください。", "err");
+        if (els.exportStatus && els.exportStatus.scrollIntoView) {
+          els.exportStatus.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
         return;
       }
       var origText = els.exportBtn.textContent;
