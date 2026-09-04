@@ -853,6 +853,20 @@ main {
   border: 1px dashed #c5c5c5;
 }
 
+/* 他タイプ重複強調（案A: 背景=所持判定を維持、枠線で表現） */
+/* 緑に統一し、実線/破線のみで見分ける */
+/* 有効参照値(otherMax - same) >= 要求数 → 緑の実線枠（追加なしで作れる） */
+.recipe-card .ing-chip.dup-full {
+  box-shadow: 0 0 0 2.5px #15803d;
+  outline: none;
+}
+/* 重複ありだが有効参照値 < 要求数 → 緑の破線枠（一部流用可） */
+.recipe-card .ing-chip.dup-part {
+  box-shadow: none;
+  outline: 2px dashed #15803d;
+  outline-offset: 1px;
+}
+
 /* Reserve (来週分確保後の残り) */
 #reserve-section {
   margin-top: 14px;
