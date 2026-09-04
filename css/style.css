@@ -839,7 +839,8 @@ main {
   gap: 6px;
 }
 
-.recipe-card .ing-chip.ok {
+.recipe-card .ing-chip.ok,
+#selected-summary .ing-chip.ok {
   background: #d7f2de;
   color: #2f7a5f;
   border: 1px solid #8cc9a0;

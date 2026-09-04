@@ -680,12 +680,28 @@
     // 集計チップ（同一カテゴリ内は合計・カテゴリ間は最大値 × 倍率）
     const chipsWrap = el("div", "ings");
     chipsWrap.style.marginTop = "10px";
+    // タイプ共通強調: 選択中レシピの属するタイプ数で数える（個数・倍率は無視、有無のみ）
+    const typeSets = {};
+    for (const [key] of state.selected) {
+      const [cat, idxStr] = key.split(":");
+      const idx = parseInt(idxStr, 10);
+      const recipe = state.categories[cat] && state.categories[cat].recipes[idx];
+      if (!recipe) continue;
+      for (const ing of recipe.ingredients) {
+        if (!typeSets[ing.name]) typeSets[ing.name] = new Set();
+        typeSets[ing.name].add(cat);
+      }
+    }
     let totalTypes = 0;
     for (const name of state.ingredients) {
       const qty = maxCounts[name];
       if (qty == null) continue;
       totalTypes++;
-      const chip = el("span", "ing-chip", abbr(name) + " ×" + qty);
+      const typeCount = typeSets[name] ? typeSets[name].size : 0;
+      let cls = "ing-chip";
+      if (typeCount >= 3) cls += " hl";
+      else if (typeCount === 2) cls += " ok";
+      const chip = el("span", cls, abbr(name) + " ×" + qty);
       chipsWrap.appendChild(chip);
     }
     els.selectedSummary.appendChild(chipsWrap);
