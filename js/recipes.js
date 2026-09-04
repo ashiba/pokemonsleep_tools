@@ -699,8 +699,8 @@
       totalTypes++;
       const typeCount = typeSets[name] ? typeSets[name].size : 0;
       let cls = "ing-chip";
-      if (typeCount >= 3) cls += " ok";
-      else if (typeCount === 2) cls += " hl";
+      if (typeCount >= 3) cls += " hl";
+      else if (typeCount === 2) cls += " ok";
       const chip = el("span", cls, abbr(name) + " ×" + qty);
       chipsWrap.appendChild(chip);
     }
