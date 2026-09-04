@@ -550,7 +550,7 @@
   }
 
   // 他タイプ重複強調: 有効参照値 = 他タイプmax - 同一カテゴリ合計 と要求数を比較
-  // 有効参照値 >= 要求数 → 濃い緑枠(dup-full)、それ以外で他タイプ重複あり → 緑枠(dup-part)
+  // 有効参照値 >= 要求数 → 濃い緑実線(dup-full)、それ以外で他タイプ重複あり → 明るい緑破線(dup-part)
   // 他タイプ選択0件 → 強調なし。同一カテゴリ分は引き算（消費換算、自身含む）。
   function applyDupToCard(card, recipe, catKey, perCat) {
     const otherCats = Object.keys(state.categories).filter((k) => k !== catKey);
