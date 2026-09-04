@@ -550,7 +550,7 @@
   }
 
   // 他タイプ重複強調: 有効参照値 = 他タイプmax - 同一カテゴリ合計 と要求数を比較
-  // 有効参照値 >= 要求数 → 黄枠(dup-full)、0 < 有効参照値 < 要求数 → 緑枠(dup-part)
+  // 有効参照値 >= 要求数 → 黄枠(dup-full)、それ以外で他タイプ重複あり → 緑枠(dup-part)
   // 他タイプ選択0件 → 強調なし。同一カテゴリ分は引き算（消費換算、自身含む）。
   function applyDupToCard(card, recipe, catKey, perCat) {
     const otherCats = Object.keys(state.categories).filter((k) => k !== catKey);
@@ -575,11 +575,10 @@
       if (eff >= ing.count) {
         chip.classList.add("dup-full");
         chip.classList.remove("dup-part");
-      } else if (eff > 0) {
+      } else {
+        // 重複さえしていれば(eff <= 0でも) dup-part
         chip.classList.add("dup-part");
         chip.classList.remove("dup-full");
-      } else {
-        chip.classList.remove("dup-full", "dup-part");
       }
     });
   }
