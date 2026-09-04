@@ -854,9 +854,9 @@ main {
 }
 
 /* 他タイプ重複強調（案A: 背景=所持判定を維持、枠線で表現） */
-/* 有効参照値(otherMax - same) >= 要求数 → 黄枠（追加なしで作れる） */
+/* 有効参照値(otherMax - same) >= 要求数 → 濃い緑枠（追加なしで作れる） */
 .recipe-card .ing-chip.dup-full {
-  box-shadow: 0 0 0 2px #e0b400;
+  box-shadow: 0 0 0 2px #166534;
 }
 /* 0 < 有効参照値 < 要求数 → 緑枠（一部流用可） */
 .recipe-card .ing-chip.dup-part {
