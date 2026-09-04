@@ -521,7 +521,7 @@
     applyLowFilter();
   }
 
-  function getReserveCounts() {
+  function getPerCatTotals() {
     const perCat = {};
     for (const [key, mult] of state.selected) {
       const [cat, idxStr] = key.split(":");
@@ -535,6 +535,11 @@
         perCat[cat][ing.name] = (perCat[cat][ing.name] || 0) + need;
       }
     }
+    return perCat;
+  }
+
+  function getReserveCounts() {
+    const perCat = getPerCatTotals();
     const maxCounts = {};
     for (const cat of Object.keys(perCat)) {
       for (const [name, qty] of Object.entries(perCat[cat])) {
@@ -542,6 +547,41 @@
       }
     }
     return maxCounts;
+  }
+
+  // 他タイプ重複強調: 有効参照値 = 他タイプmax - 同一カテゴリ合計 と要求数を比較
+  // 有効参照値 >= 要求数 → 黄枠(dup-full)、0 < 有効参照値 < 要求数 → 緑枠(dup-part)
+  // 他タイプ選択0件 → 強調なし。同一カテゴリ分は引き算（消費換算、自身含む）。
+  function applyDupToCard(card, recipe, catKey, perCat) {
+    const otherCats = Object.keys(state.categories).filter((k) => k !== catKey);
+    const sameMap = perCat[catKey] || {};
+    card.querySelectorAll(".ing-chip").forEach((chip) => {
+      const ing = recipe.ingredients.find((i) => i.name === chip.dataset.name);
+      if (!ing) {
+        chip.classList.remove("dup-full", "dup-part");
+        return;
+      }
+      let otherMax = 0;
+      for (const oc of otherCats) {
+        const v = (perCat[oc] && perCat[oc][ing.name]) || 0;
+        if (v > otherMax) otherMax = v;
+      }
+      if (otherMax === 0) {
+        chip.classList.remove("dup-full", "dup-part");
+        return;
+      }
+      const same = sameMap[ing.name] || 0;
+      const eff = otherMax - same;
+      if (eff >= ing.count) {
+        chip.classList.add("dup-full");
+        chip.classList.remove("dup-part");
+      } else if (eff > 0) {
+        chip.classList.add("dup-part");
+        chip.classList.remove("dup-full");
+      } else {
+        chip.classList.remove("dup-full", "dup-part");
+      }
+    });
   }
 
   function getOwnedRawCounts() {
@@ -715,7 +755,7 @@
   function resetCard(card) {
     card.classList.remove("creatable");
     card.querySelectorAll(".ing-chip").forEach((chip) => {
-      chip.classList.remove("ok", "miss");
+      chip.classList.remove("ok", "miss", "dup-full", "dup-part");
     });
     const badge = card.querySelector(".servings-badge");
     if (badge) {
@@ -762,10 +802,12 @@
     for (const key of Object.keys(state.categories)) {
       const recipes = state.categories[key].recipes;
       let n = 0;
+      const perCat = getPerCatTotals();
       els.recipes.querySelectorAll('.recipe-card[data-cat="' + key + '"]').forEach((card) => {
         const recipe = recipes[+card.dataset.ridx];
         if (!hasInput) {
           resetCard(card);
+          applyDupToCard(card, recipe, key, perCat);
           return;
         }
 
@@ -780,6 +822,7 @@
             chip.classList.toggle("ok", ok);
             chip.classList.toggle("miss", !ok);
           });
+          applyDupToCard(card, recipe, key, perCat);
           const badge = card.querySelector(".servings-badge");
           if (badge) {
             const servings = calcServings(recipe, base);
@@ -805,6 +848,7 @@
             chip.classList.toggle("ok", ok);
             chip.classList.toggle("miss", !ok);
           });
+          applyDupToCard(card, recipe, key, perCat);
           const badge = card.querySelector(".servings-badge");
           if (badge) {
             badge.hidden = true;
