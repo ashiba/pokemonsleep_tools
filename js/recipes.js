@@ -33,6 +33,9 @@
 
   const LS_LEVEL = "pokemon-sleep-level-v1";
   const LS_FB = "pokemon-sleep-fb-v1";
+  // チェッカー入力の永続化 (Safari がタブを破棄→再読み込みしても内容を復元できるように)
+  const LS_STATE = "pokemon-sleep-recipes-v1";
+  let saveTimer = null;
 
   const MOBILE_MAX = 900;
   const TAB_ALL = "all";
@@ -89,6 +92,117 @@
     try {
       localStorage.setItem(LS_LEVEL, String(state.level));
       localStorage.setItem(LS_FB, String(state.fb));
+    } catch (e) {}
+  }
+
+  function collectPersistState() {
+    const data = {
+      v: 1,
+      mode: (els.modeCount && els.modeCount.checked) ? "count" : "check",
+      checks: [],
+      counts: {},
+      selected: [],
+      useRemaining: !!(els.useRemaining && els.useRemaining.checked),
+      hideLow: !!state.hideLow,
+      activeTab: state.activeTab || TAB_ALL
+    };
+    try {
+      if (els.checks) {
+        els.checks.querySelectorAll("input").forEach((cb) => {
+          if (cb.checked) data.checks.push(cb.dataset.name);
+        });
+      }
+      if (els.counts) {
+        els.counts.querySelectorAll("input").forEach((inp) => {
+          const v = parseInt(inp.value, 10);
+          data.counts[inp.dataset.name] = Number.isFinite(v) && v >= 0 ? Math.min(v, 9999) : 0;
+        });
+      }
+      for (const [k, m] of state.selected) data.selected.push([k, m]);
+    } catch (e) {}
+    return data;
+  }
+
+  function saveStateNow() {
+    try {
+      localStorage.setItem(LS_STATE, JSON.stringify(collectPersistState()));
+    } catch (e) {}
+  }
+
+  function scheduleSave() {
+    try {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveStateNow, 250);
+    } catch (e) {}
+  }
+
+  function loadPersistedState() {
+    try {
+      const raw = localStorage.getItem(LS_STATE);
+      if (!raw) return null;
+      const p = JSON.parse(raw);
+      if (!p || typeof p !== "object") return null;
+      return p;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // renderAll より前に呼ぶ (mode/checks/counts/hideLow/useRemaining/activeTab をDOMへ戻す)
+  function restorePersistedState(p) {
+    if (!p || typeof p !== "object") return;
+    const known = new Set(state.ingredients);
+    try {
+      if (p.mode === "count") {
+        if (els.modeCount) els.modeCount.checked = true;
+      } else if (els.modeCheck) {
+        els.modeCheck.checked = true;
+      }
+      if (Array.isArray(p.checks) && els.checks) {
+        const set = new Set(p.checks.filter((n) => known.has(n)));
+        els.checks.querySelectorAll("input").forEach((cb) => {
+          cb.checked = set.has(cb.dataset.name);
+        });
+      }
+      if (p.counts && typeof p.counts === "object" && els.counts) {
+        els.counts.querySelectorAll("input").forEach((inp) => {
+          const v = p.counts[inp.dataset.name];
+          if (Number.isFinite(v) && v >= 0) inp.value = String(Math.min(Math.floor(v), 9999));
+        });
+      }
+      if (typeof p.hideLow === "boolean") state.hideLow = p.hideLow;
+      if (els.useRemaining && typeof p.useRemaining === "boolean") els.useRemaining.checked = p.useRemaining;
+      if (typeof p.activeTab === "string") {
+        const keys = [TAB_ALL].concat(Object.keys(state.categories));
+        if (keys.indexOf(p.activeTab) !== -1) state.activeTab = p.activeTab;
+      }
+    } catch (e) {}
+  }
+
+  // renderAll の後に呼ぶ (選択レシピを state.selected とカードへ戻す。存在しないidxは捨てる)
+  function restorePersistedSelection(p) {
+    if (!p || !Array.isArray(p.selected)) return;
+    try {
+      for (const entry of p.selected) {
+        if (!Array.isArray(entry) || entry.length < 1) continue;
+        const key = entry[0];
+        if (typeof key !== "string") continue;
+        const m = key.match(/^(curry|salad|dessert):(\d+)$/);
+        if (!m) continue;
+        const recipes = state.categories[m[1]] && state.categories[m[1]].recipes;
+        if (!recipes || !recipes[parseInt(m[2], 10)]) continue;
+        const mult = entry[1] === 2 || entry[1] === 3 ? entry[1] : 1;
+        state.selected.set(key, mult);
+      }
+      if (state.selected.size === 0 || !els.recipes) return;
+      els.recipes.querySelectorAll("input[data-key]").forEach((cb) => {
+        const k = cb.getAttribute("data-key");
+        if (state.selected.has(k)) {
+          cb.checked = true;
+          const card = cb.closest ? cb.closest(".recipe-card") : null;
+          if (card) card.classList.add("selected");
+        }
+      });
     } catch (e) {}
   }
 
@@ -237,11 +351,16 @@
         recipes: recipes
       };
     });
+    const persisted = loadPersistedState();
     buildInputs();
+    restorePersistedState(persisted);
     buildCatFilters();
     buildTabs();
     initEnergyControls();
     renderAll();
+    restorePersistedSelection(persisted);
+    updateLowFilterButton();
+    switchPane();
     updateEnergyDisplays();
     apply();
     updateSelectedSummary();
@@ -249,6 +368,15 @@
     initTabSwipe();
     initTabKeyboard();
     window.addEventListener("resize", applyTabVisibility);
+    // バックグラウンド化・破棄時に最新状態を保存 (iOS Safari のタブ破棄対策)
+    window.addEventListener("pagehide", () => {
+      saveStateNow();
+      try {
+        if (window.PokemonBagOCR && window.PokemonBagOCR.releaseProcCanvas) {
+          window.PokemonBagOCR.releaseProcCanvas();
+        }
+      } catch (e) {}
+    });
   }
 
   function buildCatFilters() {
@@ -326,6 +454,7 @@
     state.activeTab = key;
     updateTabsUI();
     applyTabVisibility();
+    scheduleSave();
   }
 
   function updateTabsUI() {
@@ -860,6 +989,8 @@
     }
     // 残り表示は常に最新化（個数入力変更時にも反映）
     renderReserveSection();
+    // 入力は常時永続化（タブ破棄→復帰時の内容リセット防止）
+    scheduleSave();
   }
 
   function switchPane() {
@@ -910,6 +1041,7 @@
       state.hideLow = !state.hideLow;
       updateLowFilterButton();
       applyLowFilter();
+      scheduleSave();
     });
   }
 
@@ -927,6 +1059,23 @@
   (function initOCR() {
     if (!els.ocrBtn || !els.ocrModal) return;
     let selectedFile = null;
+    // プレビュー用 blob URL（iOS のメモリ圧迫対策として明示的に管理する）
+    let thumbUrl = null;
+
+    function revokeThumbUrl() {
+      if (thumbUrl) {
+        try { URL.revokeObjectURL(thumbUrl); } catch (e) {}
+        thumbUrl = null;
+      }
+    }
+
+    function clearThumb() {
+      revokeThumbUrl();
+      if (els.ocrThumb) {
+        try { els.ocrThumb.removeAttribute("src"); } catch (e) {}
+        els.ocrThumb.onload = null;
+      }
+    }
 
     function openModal() {
       els.ocrModal.hidden = false;
@@ -937,13 +1086,16 @@
       els.ocrModal.hidden = true;
       els.ocrModal.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
-      // 進捗リセット（ファイル選択は保持しない）
-      if (els.ocrRun.disabled === false && els.ocrProgress.hidden) {
-        // idle時のみクリア
+      // 大きな画像データを保持し続けない（バックグラウンド化時のメモリ圧迫対策）
+      selectedFile = null;
+      revokeThumbUrl();
+      if (els.ocrThumb) {
+        try { els.ocrThumb.removeAttribute("src"); } catch (e) {}
       }
     }
     function resetOCRState() {
       selectedFile = null;
+      clearThumb();
       if (els.ocrFile) els.ocrFile.value = "";
       if (els.ocrPreview) els.ocrPreview.hidden = true;
       if (els.ocrRun) els.ocrRun.disabled = true;
@@ -963,10 +1115,15 @@
       }
       selectedFile = file;
       if (els.ocrPreview) {
+        revokeThumbUrl();
         const url = URL.createObjectURL(file);
+        thumbUrl = url;
         if (els.ocrThumb) {
           els.ocrThumb.src = url;
-          els.ocrThumb.onload = () => URL.revokeObjectURL(url);
+          els.ocrThumb.onload = () => {
+            if (thumbUrl === url) thumbUrl = null;
+            try { URL.revokeObjectURL(url); } catch (e) {}
+          };
         }
         if (els.ocrFilename) els.ocrFilename.textContent = file.name + " (" + Math.round(file.size / 1024) + "KB)";
         els.ocrPreview.hidden = false;

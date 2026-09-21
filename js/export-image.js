@@ -584,6 +584,17 @@
     }
   }
 
+  // バックグラウンド化・破棄時に巨大なオフスクリーンラッパーが残っていれば除去する
+  // (iOS Safari のメモリ圧迫による WebContent クラッシュ対策)
+  try {
+    window.addEventListener("pagehide", function () {
+      try {
+        var w = document.getElementById("__pokemon_export_wrapper");
+        if (w && w.parentNode) w.parentNode.removeChild(w);
+      } catch (e) {}
+    });
+  } catch (e) {}
+
   window.PokemonExport = {
     load: load,
     exportElement: exportElement,
