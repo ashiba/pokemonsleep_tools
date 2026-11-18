@@ -512,6 +512,30 @@
       "initialEnergy": 25356,
       "ratio": 1.61,
       "totalCount": 95
+    },
+    {
+      "name": "くさむすびサラダラップ",
+      "ingredients": [
+        {
+          "name": "ひとくちナッツ",
+          "count": 30
+        },
+        {
+          "name": "つやつやアボカド",
+          "count": 22
+        },
+        {
+          "name": "あったかジンジャー",
+          "count": 36
+        },
+        {
+          "name": "あんみんトマト",
+          "count": 33
+        }
+      ],
+      "initialEnergy": 26350,
+      "ratio": 1.82,
+      "totalCount": 121
     }
   ]
 }

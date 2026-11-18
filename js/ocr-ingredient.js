@@ -21,7 +21,8 @@
     "ワカクサコーン",
     "めざましコーヒー",
     "ずっしりカボチャ",
-    "つやつやアボカド"
+    "つやつやアボカド",
+    "ひとくちナッツ"
   ];
 
   const TESSERACT_CDN = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
@@ -116,7 +117,7 @@
 
   function parseBadgeCounts(words, text) {
     // words: [{text, bbox:{x0,y0,x1,y1}, confidence}]
-    // 19件未満でも詰めずにグリッド補完できるよう、x単体+数字の分離や
+    // 20件未満でも詰めずにグリッド補完できるよう、x単体+数字の分離や
     // o→0 / l,I→1 / S,s→5 の誤認を正規化して拾う（デメリット少なめの緩和）
     const normalizeNumStr = (s) => s.replace(/[oO]/g, "0").replace(/[lI|]/g, "1").replace(/[sS]/g, "5");
     const isXToken = (t) => /^[xX×]$/.test(t);
@@ -231,7 +232,7 @@
       }
       if (xs.length === 0 && textNumbers.length > 0) {
         xs = textNumbers.slice();
-      } else if (xs.length > 0 && xs.length < 19 && textNumbers.length > xs.length) {
+      } else if (xs.length > 0 && xs.length < 20 && textNumbers.length > xs.length) {
         // wordsが部分的に欠落しているがtextの方が多く拾えている場合は警告用に保持（適用はbbox付きのxsを優先）
         // 何もしない: buildCountsFromXs側で警告に件数を出すため保持のみ
       }
@@ -277,7 +278,7 @@
   }
 
   function buildCountsFromXs(xs) {
-    const counts = new Array(19).fill(0);
+    const counts = new Array(20).fill(0);
     const warnings = [];
 
     if (xs.length === 0) {
@@ -288,29 +289,29 @@
     // fallback (bbox無し) の場合は単純に順序マッピング（位置情報が無いため詰めるしかない）
     const isFallback = xs.some((x) => x.fallback);
     if (isFallback) {
-      for (let i = 0; i < Math.min(xs.length, 19); i++) counts[i] = xs[i].num;
-      if (xs.length < 19) warnings.push("検出数が19未満（" + xs.length + "件）でした。スクショが切れている可能性があります。足りない分は0のままになります。");
-      if (xs.length > 19) warnings.push("検出数が19を超えました（" + xs.length + "件）。先頭19件のみ適用します。");
+      for (let i = 0; i < Math.min(xs.length, 20); i++) counts[i] = xs[i].num;
+      if (xs.length < 20) warnings.push("検出数が20未満（" + xs.length + "件）でした。スクショが切れている可能性があります。足りない分は0のままになります。");
+      if (xs.length > 20) warnings.push("検出数が20を超えました（" + xs.length + "件）。先頭20件のみ適用します。");
       return { counts, warnings };
     }
 
-    // 19件ちょうどのときは従来どおり行優先の順序マッピングで高速に処理（既存の正しいケースを崩さない）
-    if (xs.length === 19) {
-      for (let i = 0; i < 19; i++) counts[i] = xs[i].num;
+    // 20件ちょうどのときは従来どおり行優先の順序マッピングで高速に処理（既存の正しいケースを崩さない）
+    if (xs.length === 20) {
+      for (let i = 0; i < 20; i++) counts[i] = xs[i].num;
       return { counts, warnings };
     }
 
-    // 19件未満/超過時のグリッド補完: 詰めずに 4列×5行（最終行3列）の19スロットへ最近傍割当て
+    // 20件未満/超過時のグリッド補完: 詰めずに 4列×5行の20スロットへ最近傍割当て
     // 1件欠落しても以降が前詰めされないため、ジンジャー/コーヒー等のずれを防ぐ。
-    // デメリット少なめ: 19件とれない場合でも読み取れた位置は正しいスロットに入り、欠けた箇所だけ0のまま残る。
-    if (xs.length !== 19) {
+    // デメリット少なめ: 20件とれない場合でも読み取れた位置は正しいスロットに入り、欠けた箇所だけ0のまま残る。
+    if (xs.length !== 20) {
       try {
         const cxs = xs.map((x) => (x.bbox.x0 + x.bbox.x1) / 2);
         const cys = xs.map((x) => (x.bbox.y0 + x.bbox.y1) / 2);
         const minX = Math.min(...cxs);
         const maxX = Math.max(...cxs);
         const colWidth = (maxX - minX) / 3 || 1;
-        // 列中心（0..3）。最終行は 0..2 を使用
+        // 列中心（0..3）
         const colCenters = [minX, minX + colWidth, minX + 2 * colWidth, minX + 3 * colWidth];
 
         // 行クラスタ（yで再クラスタリングして行番号を確定）
@@ -355,7 +356,7 @@
         for (const rStr of Object.keys(rowsMap).sort((a, b) => +a - +b)) {
           const r = parseInt(rStr, 10);
           const list = rowsMap[r].sort((a, b) => cxs[a] - cxs[b]);
-          const maxCol = r === 4 ? 2 : 3; // 最終行は3列
+          const maxCol = 3; // 全行4列
           const availCols = [];
           for (let c = 0; c <= maxCol; c++) availCols.push(c);
           for (const idx of list) {
@@ -371,8 +372,7 @@
             }
             if (bestC !== -1) {
               const slot = r * 4 + bestC;
-              // 最終行で r*4+3 は存在しないためスキップ（r=4は0..2のみ）
-              if (slot < 19 && !usedSlots.has(slot)) {
+              if (slot < 20 && !usedSlots.has(slot)) {
                 counts[slot] = xs[idx].num;
                 usedSlots.add(slot);
                 availCols.splice(availCols.indexOf(bestC), 1);
@@ -384,13 +384,13 @@
 
         if (assigned === 0) {
           // グリッド推定が失敗した場合は安全に先頭詰めへフォールバック（デメリット回避）
-          for (let i = 0; i < Math.min(xs.length, 19); i++) counts[i] = xs[i].num;
+          for (let i = 0; i < Math.min(xs.length, 20); i++) counts[i] = xs[i].num;
         } else {
           // 欠けたスロットは0のまま残す（詰めない）。不足分は手動で0と見分けられるよう警告する
-          if (xs.length < 19) {
-            warnings.push("検出数が19未満（" + xs.length + "件）でした。位置から推定して該当スロットのみ反映し、読み取れなかった箇所は0のままにしました。0表示の食材は実際の所持数を手入力で補正してください。");
-          } else if (xs.length > 19) {
-            warnings.push("検出数が19を超えました（" + xs.length + "件）。位置が近い19件を優先して反映しました。余分な検出は無視されています。");
+          if (xs.length < 20) {
+            warnings.push("検出数が20未満（" + xs.length + "件）でした。位置から推定して該当スロットのみ反映し、読み取れなかった箇所は0のままにしました。0表示の食材は実際の所持数を手入力で補正してください。");
+          } else if (xs.length > 20) {
+            warnings.push("検出数が20を超えました（" + xs.length + "件）。位置が近い20件を優先して反映しました。余分な検出は無視されています。");
           }
           return { counts, warnings };
         }
@@ -400,12 +400,12 @@
     }
 
     // フォールバック（グリッド割当て失敗時やそれ以外のケース）: 従来の詰め
-    for (let i = 0; i < Math.min(xs.length, 19); i++) counts[i] = xs[i].num;
+    for (let i = 0; i < Math.min(xs.length, 20); i++) counts[i] = xs[i].num;
 
-    if (xs.length < 19) {
-      warnings.push("検出数が19未満（" + xs.length + "件）でした。スクショが切れているか、バッグがスクロール途中の可能性があります。検出できた分は適用し、残りは0のままになります。画像は一番上までスクロールした状態で、19食材が全て見えるように撮り直すと精度が上がります。");
-    } else if (xs.length > 19) {
-      warnings.push("検出数が19を超えました（" + xs.length + "件）。先頭19件のみ適用します。");
+    if (xs.length < 20) {
+      warnings.push("検出数が20未満（" + xs.length + "件）でした。スクショが切れているか、バッグがスクロール途中の可能性があります。検出できた分は適用し、残りは0のままになります。画像は一番上までスクロールした状態で、20食材が全て見えるように撮り直すと精度が上がります。");
+    } else if (xs.length > 20) {
+      warnings.push("検出数が20を超えました（" + xs.length + "件）。先頭20件のみ適用します。");
     }
 
     return { counts, warnings };

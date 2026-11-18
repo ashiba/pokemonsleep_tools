@@ -488,6 +488,26 @@
       "initialEnergy": 10945,
       "ratio": 1.48,
       "totalCount": 63
+    },
+    {
+      "name": "タネばくだんナンカレー",
+      "ingredients": [
+        {
+          "name": "ひとくちナッツ",
+          "count": 15
+        },
+        {
+          "name": "ずっしりカボチャ",
+          "count": 12
+        },
+        {
+          "name": "ワカクサコーン",
+          "count": 12
+        }
+      ],
+      "initialEnergy": 7950,
+      "ratio": 1.25,
+      "totalCount": 39
     }
   ]
 }

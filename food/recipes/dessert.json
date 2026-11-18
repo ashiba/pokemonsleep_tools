@@ -524,6 +524,30 @@
       "initialEnergy": 25484,
       "ratio": 1.78,
       "totalCount": 115
+    },
+    {
+      "name": "おいしいシッポロールケーキ",
+      "ingredients": [
+        {
+          "name": "ひとくちナッツ",
+          "count": 26
+        },
+        {
+          "name": "おいしいシッポ",
+          "count": 10
+        },
+        {
+          "name": "ワカクサ大豆",
+          "count": 22
+        },
+        {
+          "name": "とくせんエッグ",
+          "count": 33
+        }
+      ],
+      "initialEnergy": 19846,
+      "ratio": 1.61,
+      "totalCount": 91
     }
   ]
 }
