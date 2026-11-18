@@ -26,7 +26,8 @@
     "ワカクサコーン": "コーン",
     "めざましコーヒー": "コーヒー",
     "ずっしりカボチャ": "カボチャ",
-    "つやつやアボカド": "アボカド"
+    "つやつやアボカド": "アボカド",
+    "ひとくちナッツ": "ナッツ"
   };
 
   const abbr = (name) => ABBR[name] || name;
@@ -84,7 +85,7 @@
       var lv = parseInt(localStorage.getItem(LS_LEVEL), 10);
       if (Number.isFinite(lv) && lv >= 1 && lv <= 70) state.level = lv;
       var fb = parseInt(localStorage.getItem(LS_FB), 10);
-      if (Number.isFinite(fb) && fb >= 0 && fb <= 85) state.fb = fb;
+      if (Number.isFinite(fb) && fb >= 0 && fb <= 95) state.fb = fb;
     } catch (e) {}
   }
 
@@ -1209,7 +1210,7 @@
           });
           setCountsFromOCR(result.counts);
           if (els.ocrBar) els.ocrBar.style.width = "100%";
-          if (els.ocrStatus) els.ocrStatus.textContent = "完了（" + result.counts.filter((n) => n > 0).length + "件/19件）";
+          if (els.ocrStatus) els.ocrStatus.textContent = "完了（" + result.counts.filter((n) => n > 0).length + "件/20件）";
           if (result.warnings && result.warnings.length) {
             if (els.ocrWarn) {
               els.ocrWarn.textContent = result.warnings.join(" ");

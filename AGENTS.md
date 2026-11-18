@@ -24,7 +24,7 @@
 ## 設計意図・決定事項
 
 - **静的・依存ゼロ・ビルドなし**: バニラ JS, 共通 CSS 1枚。フレームワーク・バンドラは使わない。手間なく載せるため。原則CDN不使用だが、**食材OCRのみ例外**で Tesseract.js を CDN から遅延読込する（初回クリック時のみ、完全ブラウザ内処理で画像は外部送信なし）。
-- **データは JSON で同梱**: `food/ingredients.json`(食材名19、正式名・表示順が定義)と `food/recipes/{curry,dessert,salad}.json`。各レシピは `{name, ingredients:[{name,count}], initialEnergy, ratio}`。
+- **データは JSON で同梱**: `food/ingredients.json`(食材名20、正式名・表示順が定義)と `food/recipes/{curry,dessert,salad}.json`。各レシピは `{name, ingredients:[{name,count}], initialEnergy, ratio}`。
 - **食材は「正式名」でデータを持つ。表示はページによって略称(ABBR)を使う**。チェッカーでは略称表示(ながねぎ・リンゴ・アボカド等)。検索・判定ロジックは常に正式名基準。
 - **色の意味(チェッカー)**: 「作れる = 枠を緑」「足りない食材 = チップをグレー」。「赤枠」は使わない方針(ユーザー指定)。
 - **未入力時はハイライトを出さない**(全カード通常表示)。

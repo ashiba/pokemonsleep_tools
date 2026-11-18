@@ -25,7 +25,7 @@
   // エナジーを Lv / FB で再計算
   // initialEnergy: Lv1 の表示エナジー (= レシピ基本エナジー)
   // level: 1-65(70)
-  // fb: 0-85 (%)
+  // fb: 0-95 (%)
   // 計算式: Lv補正後 = initial + round(initial * bonus/100)
   //         FB補正後 = floor(Lv補正後 * (1 + fb/100))
   // wiki 検証式に準拠 (Round = half up, Floor で切捨て)
@@ -35,7 +35,7 @@
     var fb = parseInt(fbPercent, 10);
     if (!Number.isFinite(fb) || fb <= 0) return lvEnergy;
     if (fb < 0) fb = 0;
-    if (fb > 85) fb = 85;
+    if (fb > 95) fb = 95;
     return Math.floor(lvEnergy * (1 + fb / 100));
   }
 
