@@ -14,7 +14,8 @@
         }
       ],
       "initialEnergy": 1907,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 14
     },
     {
       "name": "ふくつのジンジャークッキー",
@@ -37,7 +38,8 @@
         }
       ],
       "initialEnergy": 4921,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 35
     },
     {
       "name": "とくせんリンゴジュース",
@@ -48,7 +50,8 @@
         }
       ],
       "initialEnergy": 855,
-      "ratio": 1.06
+      "ratio": 1.06,
+      "totalCount": 8
     },
     {
       "name": "クラフトサイコソーダ",
@@ -59,7 +62,8 @@
         }
       ],
       "initialEnergy": 1079,
-      "ratio": 1.06
+      "ratio": 1.06,
+      "totalCount": 9
     },
     {
       "name": "ひのこのジンジャーティー",
@@ -74,7 +78,8 @@
         }
       ],
       "initialEnergy": 1913,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 16
     },
     {
       "name": "プリンのプリンアラモード",
@@ -97,7 +102,8 @@
         }
       ],
       "initialEnergy": 7594,
-      "ratio": 1.35
+      "ratio": 1.35,
+      "totalCount": 55
     },
     {
       "name": "あくまのキッスフルーツオレ",
@@ -120,7 +126,8 @@
         }
       ],
       "initialEnergy": 4734,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 35
     },
     {
       "name": "ねがいごとアップルパイ",
@@ -135,7 +142,8 @@
         }
       ],
       "initialEnergy": 1748,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 16
     },
     {
       "name": "ネロリのデトックスティー",
@@ -154,7 +162,8 @@
         }
       ],
       "initialEnergy": 5065,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 35
     },
     {
       "name": "あまいかおりチョコケーキ",
@@ -173,7 +182,8 @@
         }
       ],
       "initialEnergy": 3378,
-      "ratio": 1.17
+      "ratio": 1.17,
+      "totalCount": 24
     },
     {
       "name": "モーモーホットミルク",
@@ -184,7 +194,8 @@
         }
       ],
       "initialEnergy": 814,
-      "ratio": 1.06
+      "ratio": 1.06,
+      "totalCount": 7
     },
     {
       "name": "かるわざソイケーキ",
@@ -199,7 +210,8 @@
         }
       ],
       "initialEnergy": 1924,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 15
     },
     {
       "name": "はりきりプロテインスムージー",
@@ -214,7 +226,8 @@
         }
       ],
       "initialEnergy": 3168,
-      "ratio": 1.17
+      "ratio": 1.17,
+      "totalCount": 23
     },
     {
       "name": "マイペースやさいジュース",
@@ -229,7 +242,8 @@
         }
       ],
       "initialEnergy": 1924,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 16
     },
     {
       "name": "おおきいマラサダ",
@@ -248,7 +262,8 @@
         }
       ],
       "initialEnergy": 3015,
-      "ratio": 1.17
+      "ratio": 1.17,
+      "totalCount": 23
     },
     {
       "name": "ちからもちソイドーナッツ",
@@ -267,7 +282,8 @@
         }
       ],
       "initialEnergy": 5547,
-      "ratio": 1.35
+      "ratio": 1.35,
+      "totalCount": 35
     },
     {
       "name": "だいばくはつポップコーン",
@@ -286,7 +302,8 @@
         }
       ],
       "initialEnergy": 6048,
-      "ratio": 1.35
+      "ratio": 1.35,
+      "totalCount": 36
     },
     {
       "name": "おちゃかいコーンスコーン",
@@ -309,7 +326,8 @@
         }
       ],
       "initialEnergy": 10925,
-      "ratio": 1.48
+      "ratio": 1.48,
+      "totalCount": 67
     },
     {
       "name": "はなびらのまいチョコタルト",
@@ -324,7 +342,8 @@
         }
       ],
       "initialEnergy": 3314,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 22
     },
     {
       "name": "フラワーギフトマカロン",
@@ -347,7 +366,8 @@
         }
       ],
       "initialEnergy": 13834,
-      "ratio": 1.48
+      "ratio": 1.48,
+      "totalCount": 77
     },
     {
       "name": "はやおきコーヒーゼリー",
@@ -366,7 +386,8 @@
         }
       ],
       "initialEnergy": 6793,
-      "ratio": 1.35
+      "ratio": 1.35,
+      "totalCount": 42
     },
     {
       "name": "スパークスパイスコーラ",
@@ -389,7 +410,8 @@
         }
       ],
       "initialEnergy": 17494,
-      "ratio": 1.61
+      "ratio": 1.61,
+      "totalCount": 87
     },
     {
       "name": "かたやぶりコーンティラミス",
@@ -408,7 +430,8 @@
         }
       ],
       "initialEnergy": 7125,
-      "ratio": 1.35
+      "ratio": 1.35,
+      "totalCount": 40
     },
     {
       "name": "ドオーのエクレア",
@@ -431,7 +454,8 @@
         }
       ],
       "initialEnergy": 20885,
-      "ratio": 1.61
+      "ratio": 1.61,
+      "totalCount": 102
     },
     {
       "name": "ドキドキこわいかおパンケーキ",
@@ -454,7 +478,8 @@
         }
       ],
       "initialEnergy": 24354,
-      "ratio": 1.78
+      "ratio": 1.78,
+      "totalCount": 103
     },
     {
       "name": "グラスミキサースムージー",
@@ -473,7 +498,8 @@
         }
       ],
       "initialEnergy": 8165,
-      "ratio": 1.35
+      "ratio": 1.35,
+      "totalCount": 48
     },
     {
       "name": "みつあつめチョコワッフル",
@@ -496,7 +522,8 @@
         }
       ],
       "initialEnergy": 25484,
-      "ratio": 1.78
+      "ratio": 1.78,
+      "totalCount": 115
     }
   ]
 }

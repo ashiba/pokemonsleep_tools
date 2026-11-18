@@ -224,6 +224,79 @@ main {
   color: var(--muted);
 }
 
+.results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.results-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.results-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--accent-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+}
+
+.export-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.export-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #fff;
+  color: var(--accent-dark);
+}
+
+.export-status {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.export-status[hidden] {
+  display: none !important;
+}
+
+.export-status.ok {
+  background: #eef6ee;
+  border: 1px solid #a9d3a9;
+  color: #2f6b2f;
+}
+
+.export-status.err {
+  background: #fde8e8;
+  border: 1px solid #e0a0a0;
+  color: #8a2a2a;
+}
+
 .result-card {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -733,6 +806,21 @@ main {
   color: #fff;
 }
 
+.mult-btn.close-btn {
+  border-radius: 6px;
+  background: #f0efea;
+  border-color: var(--border);
+  color: #8a857e;
+  padding: 2px 8px;
+  margin-right: 24px;
+}
+
+.mult-btn.close-btn:hover {
+  background: #e0dcd3;
+  border-color: #c5c0b5;
+  color: #5a5550;
+}
+
 .recipe-card .dish .name {
   font-weight: 600;
 }
@@ -751,7 +839,8 @@ main {
   gap: 6px;
 }
 
-.recipe-card .ing-chip.ok {
+.recipe-card .ing-chip.ok,
+#selected-summary .ing-chip.ok {
   background: #d7f2de;
   color: #2f7a5f;
   border: 1px solid #8cc9a0;
@@ -762,6 +851,20 @@ main {
   background: #ececec;
   color: #9a9a9a;
   border: 1px dashed #c5c5c5;
+}
+
+/* 他タイプ重複強調（案A: 背景=所持判定を維持、枠線で表現） */
+/* 緑に統一し、実線/破線のみで見分ける */
+/* 有効参照値(otherMax - same) >= 要求数 → 緑の実線枠（追加なしで作れる） */
+.recipe-card .ing-chip.dup-full {
+  box-shadow: 0 0 0 2.5px #15803d;
+  outline: none;
+}
+/* 重複ありだが有効参照値 < 要求数 → 緑の破線枠（一部流用可） */
+.recipe-card .ing-chip.dup-part {
+  box-shadow: none;
+  outline: 2px dashed #15803d;
+  outline-offset: 1px;
 }
 
 /* Reserve (来週分確保後の残り) */
@@ -832,8 +935,12 @@ main {
   max-width: 240px;
   accent-color: var(--accent);
   cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
   height: 36px;
-  padding: 6px 0;
+  padding: 0;
+  margin: 0;
   touch-action: pan-x;
 }
 .energy-controls input[type="range"]::-webkit-slider-runnable-track {
@@ -849,6 +956,7 @@ main {
 .energy-controls input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
+  box-sizing: border-box;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -859,6 +967,7 @@ main {
   cursor: pointer;
 }
 .energy-controls input[type="range"]::-moz-range-thumb {
+  box-sizing: border-box;
   width: 28px;
   height: 28px;
   border-radius: 50%;

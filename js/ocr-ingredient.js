@@ -42,6 +42,9 @@
   }
 
   // 前処理用Canvas（共用）
+  // 注意: iOS Safari はタブをバックグラウンド化→復帰した際にメモリ圧迫で
+  // WebContent を落とす("問題が繰り返し起きました")ことがある。そのため
+  // 巨大な加工ビットマップを保持し続けず、使い終わり・退場時は破棄する。
   let procCanvas = null;
   let pctx = null;
   function getCanvas() {
@@ -51,6 +54,22 @@
     }
     return procCanvas;
   }
+
+  // 加工ビットマップを解放する（次回 prepareCanvas で作り直される）
+  function releaseProcCanvas() {
+    try {
+      if (procCanvas) {
+        procCanvas.width = 1;
+        procCanvas.height = 1;
+        if (pctx) pctx.clearRect(0, 0, 1, 1);
+      }
+    } catch (_) {}
+  }
+
+  // バックグラウンド化・破棄時は加工ビットマップを手放す
+  try {
+    window.addEventListener("pagehide", releaseProcCanvas);
+  } catch (_) {}
 
   function prepareCanvas(img) {
     const canvas = getCanvas();
@@ -437,12 +456,15 @@
       try {
         await worker.terminate();
       } catch (_) {}
+      // Tesseract が canvas 参照を保持し続けないよう加工ビットマップを破棄
+      releaseProcCanvas();
     }
   }
 
   window.PokemonBagOCR = {
     runOnce,
     loadTesseract,
+    releaseProcCanvas,
     INGREDIENTS,
   };
 })();

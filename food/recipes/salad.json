@@ -18,7 +18,8 @@
         }
       ],
       "initialEnergy": 8169,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 35
     },
     {
       "name": "キノコのほうしサラダ",
@@ -37,7 +38,8 @@
         }
       ],
       "initialEnergy": 5859,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 33
     },
     {
       "name": "ゆきかきシーザーサラダ",
@@ -52,7 +54,8 @@
         }
       ],
       "initialEnergy": 1898,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 16
     },
     {
       "name": "くいしんぼうポテトサラダ",
@@ -75,7 +78,8 @@
         }
       ],
       "initialEnergy": 5040,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 36
     },
     {
       "name": "うるおいとうふサラダ",
@@ -90,7 +94,8 @@
         }
       ],
       "initialEnergy": 3113,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 24
     },
     {
       "name": "ばかぢからワイルドサラダ",
@@ -113,7 +118,8 @@
         }
       ],
       "initialEnergy": 3046,
-      "ratio": 1.17
+      "ratio": 1.17,
+      "totalCount": 23
     },
     {
       "name": "マメハムサラダ",
@@ -124,7 +130,8 @@
         }
       ],
       "initialEnergy": 978,
-      "ratio": 1.06
+      "ratio": 1.06,
+      "totalCount": 8
     },
     {
       "name": "あんみんトマトサラダ",
@@ -135,7 +142,8 @@
         }
       ],
       "initialEnergy": 1045,
-      "ratio": 1.06
+      "ratio": 1.06,
+      "totalCount": 8
     },
     {
       "name": "モーモーカプレーゼ",
@@ -154,7 +162,8 @@
         }
       ],
       "initialEnergy": 2942,
-      "ratio": 1.17
+      "ratio": 1.17,
+      "totalCount": 23
     },
     {
       "name": "ムラっけチョコミートサラダ",
@@ -169,7 +178,8 @@
         }
       ],
       "initialEnergy": 3665,
-      "ratio": 1.17
+      "ratio": 1.17,
+      "totalCount": 23
     },
     {
       "name": "オーバーヒートサラダ",
@@ -188,7 +198,8 @@
         }
       ],
       "initialEnergy": 5225,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 35
     },
     {
       "name": "とくせんリンゴサラダ",
@@ -199,7 +210,8 @@
         }
       ],
       "initialEnergy": 855,
-      "ratio": 1.06
+      "ratio": 1.06,
+      "totalCount": 8
     },
     {
       "name": "めんえきねぎサラダ",
@@ -214,7 +226,8 @@
         }
       ],
       "initialEnergy": 2845,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 15
     },
     {
       "name": "メロメロりんごのチーズサラダ",
@@ -233,7 +246,8 @@
         }
       ],
       "initialEnergy": 2655,
-      "ratio": 1.17
+      "ratio": 1.17,
+      "totalCount": 23
     },
     {
       "name": "ニンジャサラダ",
@@ -256,7 +270,8 @@
         }
       ],
       "initialEnergy": 11659,
-      "ratio": 1.48
+      "ratio": 1.48,
+      "totalCount": 57
     },
     {
       "name": "ねっぷうとうふサラダ",
@@ -271,7 +286,8 @@
         }
       ],
       "initialEnergy": 2114,
-      "ratio": 1.11
+      "ratio": 1.11,
+      "totalCount": 16
     },
     {
       "name": "ワカクササラダ",
@@ -294,7 +310,8 @@
         }
       ],
       "initialEnergy": 11393,
-      "ratio": 1.48
+      "ratio": 1.48,
+      "totalCount": 62
     },
     {
       "name": "めいそうスイートサラダ",
@@ -313,7 +330,8 @@
         }
       ],
       "initialEnergy": 7675,
-      "ratio": 1.48
+      "ratio": 1.48,
+      "totalCount": 49
     },
     {
       "name": "みだれづきコーンサラダ",
@@ -328,7 +346,8 @@
         }
       ],
       "initialEnergy": 2785,
-      "ratio": 1.25
+      "ratio": 1.25,
+      "totalCount": 17
     },
     {
       "name": "クロスチョップドサラダ",
@@ -351,7 +370,8 @@
         }
       ],
       "initialEnergy": 8755,
-      "ratio": 1.35
+      "ratio": 1.35,
+      "totalCount": 56
     },
     {
       "name": "まけんきコーヒーサラダ",
@@ -374,7 +394,8 @@
         }
       ],
       "initialEnergy": 20218,
-      "ratio": 1.61
+      "ratio": 1.61,
+      "totalCount": 100
     },
     {
       "name": "はなふぶきミモザサラダ",
@@ -397,7 +418,8 @@
         }
       ],
       "initialEnergy": 11811,
-      "ratio": 1.47
+      "ratio": 1.47,
+      "totalCount": 69
     },
     {
       "name": "りんごさんヨーグルトサラダ",
@@ -420,7 +442,8 @@
         }
       ],
       "initialEnergy": 19293,
-      "ratio": 1.78
+      "ratio": 1.78,
+      "totalCount": 104
     },
     {
       "name": "くだけるアボカドサラダ",
@@ -439,7 +462,8 @@
         }
       ],
       "initialEnergy": 7125,
-      "ratio": 1.35
+      "ratio": 1.35,
+      "totalCount": 42
     },
     {
       "name": "じならしワカモレチップス",
@@ -462,7 +486,8 @@
         }
       ],
       "initialEnergy": 25162,
-      "ratio": 1.78
+      "ratio": 1.78,
+      "totalCount": 105
     },
     {
       "name": "ごろごろねっとうサラダ",
@@ -485,7 +510,8 @@
         }
       ],
       "initialEnergy": 25356,
-      "ratio": 1.61
+      "ratio": 1.61,
+      "totalCount": 95
     }
   ]
 }

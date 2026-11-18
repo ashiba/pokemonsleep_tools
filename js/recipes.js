@@ -33,9 +33,13 @@
 
   const LS_LEVEL = "pokemon-sleep-level-v1";
   const LS_FB = "pokemon-sleep-fb-v1";
+  // チェッカー入力の永続化 (Safari がタブを破棄→再読み込みしても内容を復元できるように)
+  const LS_STATE = "pokemon-sleep-recipes-v1";
+  let saveTimer = null;
 
   const MOBILE_MAX = 900;
   const TAB_ALL = "all";
+  const LOW_THRESHOLD = 42;
   const state = {
     ingredients: [],
     categories: {},
@@ -46,7 +50,8 @@
     selected: new Map(),
     level: 1,
     fb: 0,
-    activeTab: null
+    activeTab: null,
+    hideLow: true
   };
 
   function isMobile() {
@@ -90,6 +95,117 @@
     } catch (e) {}
   }
 
+  function collectPersistState() {
+    const data = {
+      v: 1,
+      mode: (els.modeCount && els.modeCount.checked) ? "count" : "check",
+      checks: [],
+      counts: {},
+      selected: [],
+      useRemaining: !!(els.useRemaining && els.useRemaining.checked),
+      hideLow: !!state.hideLow,
+      activeTab: state.activeTab || TAB_ALL
+    };
+    try {
+      if (els.checks) {
+        els.checks.querySelectorAll("input").forEach((cb) => {
+          if (cb.checked) data.checks.push(cb.dataset.name);
+        });
+      }
+      if (els.counts) {
+        els.counts.querySelectorAll("input").forEach((inp) => {
+          const v = parseInt(inp.value, 10);
+          data.counts[inp.dataset.name] = Number.isFinite(v) && v >= 0 ? Math.min(v, 9999) : 0;
+        });
+      }
+      for (const [k, m] of state.selected) data.selected.push([k, m]);
+    } catch (e) {}
+    return data;
+  }
+
+  function saveStateNow() {
+    try {
+      localStorage.setItem(LS_STATE, JSON.stringify(collectPersistState()));
+    } catch (e) {}
+  }
+
+  function scheduleSave() {
+    try {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveStateNow, 250);
+    } catch (e) {}
+  }
+
+  function loadPersistedState() {
+    try {
+      const raw = localStorage.getItem(LS_STATE);
+      if (!raw) return null;
+      const p = JSON.parse(raw);
+      if (!p || typeof p !== "object") return null;
+      return p;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // renderAll より前に呼ぶ (mode/checks/counts/hideLow/useRemaining/activeTab をDOMへ戻す)
+  function restorePersistedState(p) {
+    if (!p || typeof p !== "object") return;
+    const known = new Set(state.ingredients);
+    try {
+      if (p.mode === "count") {
+        if (els.modeCount) els.modeCount.checked = true;
+      } else if (els.modeCheck) {
+        els.modeCheck.checked = true;
+      }
+      if (Array.isArray(p.checks) && els.checks) {
+        const set = new Set(p.checks.filter((n) => known.has(n)));
+        els.checks.querySelectorAll("input").forEach((cb) => {
+          cb.checked = set.has(cb.dataset.name);
+        });
+      }
+      if (p.counts && typeof p.counts === "object" && els.counts) {
+        els.counts.querySelectorAll("input").forEach((inp) => {
+          const v = p.counts[inp.dataset.name];
+          if (Number.isFinite(v) && v >= 0) inp.value = String(Math.min(Math.floor(v), 9999));
+        });
+      }
+      if (typeof p.hideLow === "boolean") state.hideLow = p.hideLow;
+      if (els.useRemaining && typeof p.useRemaining === "boolean") els.useRemaining.checked = p.useRemaining;
+      if (typeof p.activeTab === "string") {
+        const keys = [TAB_ALL].concat(Object.keys(state.categories));
+        if (keys.indexOf(p.activeTab) !== -1) state.activeTab = p.activeTab;
+      }
+    } catch (e) {}
+  }
+
+  // renderAll の後に呼ぶ (選択レシピを state.selected とカードへ戻す。存在しないidxは捨てる)
+  function restorePersistedSelection(p) {
+    if (!p || !Array.isArray(p.selected)) return;
+    try {
+      for (const entry of p.selected) {
+        if (!Array.isArray(entry) || entry.length < 1) continue;
+        const key = entry[0];
+        if (typeof key !== "string") continue;
+        const m = key.match(/^(curry|salad|dessert):(\d+)$/);
+        if (!m) continue;
+        const recipes = state.categories[m[1]] && state.categories[m[1]].recipes;
+        if (!recipes || !recipes[parseInt(m[2], 10)]) continue;
+        const mult = entry[1] === 2 || entry[1] === 3 ? entry[1] : 1;
+        state.selected.set(key, mult);
+      }
+      if (state.selected.size === 0 || !els.recipes) return;
+      els.recipes.querySelectorAll("input[data-key]").forEach((cb) => {
+        const k = cb.getAttribute("data-key");
+        if (state.selected.has(k)) {
+          cb.checked = true;
+          const card = cb.closest ? cb.closest(".recipe-card") : null;
+          if (card) card.classList.add("selected");
+        }
+      });
+    } catch (e) {}
+  }
+
   function updateEnergyDisplays() {
     for (const key of Object.keys(state.categories)) {
       const recipes = state.categories[key].recipes;
@@ -112,6 +228,24 @@
   function setBulkMult(mult) {
     if (state.selected.size === 0) return;
     for (const k of state.selected.keys()) state.selected.set(k, mult);
+    updateSelectedSummary();
+    apply();
+  }
+
+  function deselectRecipe(key) {
+    if (!state.selected.has(key)) return;
+    state.selected.delete(key);
+    if (els.recipes) {
+      const list = els.recipes.querySelectorAll('input[data-key]');
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].getAttribute("data-key") === key) {
+          list[i].checked = false;
+          const card = list[i].closest ? list[i].closest(".recipe-card") : null;
+          if (card) card.classList.remove("selected");
+          break;
+        }
+      }
+    }
     updateSelectedSummary();
     apply();
   }
@@ -174,7 +308,10 @@
     fbSlider: $("field-bonus"),
     levelVal: $("level-val"),
     levelMult: $("level-mult"),
-    fbVal: $("fb-val")
+    fbVal: $("fb-val"),
+    exportBtn: $("export-recipes-image"),
+    exportStatus: $("export-recipes-status"),
+    toggleLow: $("toggle-low")
   };
 
   function initEnergyControls() {
@@ -214,11 +351,16 @@
         recipes: recipes
       };
     });
+    const persisted = loadPersistedState();
     buildInputs();
+    restorePersistedState(persisted);
     buildCatFilters();
     buildTabs();
     initEnergyControls();
     renderAll();
+    restorePersistedSelection(persisted);
+    updateLowFilterButton();
+    switchPane();
     updateEnergyDisplays();
     apply();
     updateSelectedSummary();
@@ -226,6 +368,15 @@
     initTabSwipe();
     initTabKeyboard();
     window.addEventListener("resize", applyTabVisibility);
+    // バックグラウンド化・破棄時に最新状態を保存 (iOS Safari のタブ破棄対策)
+    window.addEventListener("pagehide", () => {
+      saveStateNow();
+      try {
+        if (window.PokemonBagOCR && window.PokemonBagOCR.releaseProcCanvas) {
+          window.PokemonBagOCR.releaseProcCanvas();
+        }
+      } catch (e) {}
+    });
   }
 
   function buildCatFilters() {
@@ -249,6 +400,26 @@
     btn.classList.toggle("on", visible);
     st.textContent = visible ? "ON" : "OFF";
     applyTabVisibility();
+  }
+
+  function applyLowFilter() {
+    if (!els.recipes) return;
+    for (const key of Object.keys(state.categories)) {
+      const recipes = state.categories[key].recipes;
+      els.recipes.querySelectorAll('.recipe-card[data-cat="' + key + '"]').forEach((card) => {
+        const recipe = recipes[+card.dataset.ridx];
+        if (!recipe) return;
+        const isLow = recipe.totalCount < LOW_THRESHOLD;
+        card.style.display = (state.hideLow && isLow) ? "none" : "";
+      });
+    }
+  }
+
+  function updateLowFilterButton() {
+    if (!els.toggleLow) return;
+    els.toggleLow.classList.toggle("on", state.hideLow);
+    const st = els.toggleLow.querySelector(".st");
+    if (st) st.textContent = state.hideLow ? "ON" : "OFF";
   }
 
   function buildTabs() {
@@ -283,6 +454,7 @@
     state.activeTab = key;
     updateTabsUI();
     applyTabVisibility();
+    scheduleSave();
   }
 
   function updateTabsUI() {
@@ -453,7 +625,7 @@
         dish.appendChild(checkLabel);
         dish.appendChild(el("span", "name", recipe.name));
         const meta = el("div", "dish-meta");
-        meta.appendChild(el("span", "total", "" + recipe.ingredients.reduce((s, ing) => s + ing.count, 0)));
+        meta.appendChild(el("span", "total", "" + recipe.totalCount));
         meta.appendChild(el("span", "ratio", recipe.ratio.toFixed(2)));
         meta.appendChild(el("span", "energy", "E: " + getEnergy(recipe.initialEnergy).toLocaleString()));
         const badge = el("span", "servings-badge");
@@ -475,9 +647,10 @@
       frag.appendChild(section);
     }
     els.recipes.appendChild(frag);
+    applyLowFilter();
   }
 
-  function getReserveCounts() {
+  function getPerCatTotals() {
     const perCat = {};
     for (const [key, mult] of state.selected) {
       const [cat, idxStr] = key.split(":");
@@ -491,6 +664,11 @@
         perCat[cat][ing.name] = (perCat[cat][ing.name] || 0) + need;
       }
     }
+    return perCat;
+  }
+
+  function getReserveCounts() {
+    const perCat = getPerCatTotals();
     const maxCounts = {};
     for (const cat of Object.keys(perCat)) {
       for (const [name, qty] of Object.entries(perCat[cat])) {
@@ -498,6 +676,40 @@
       }
     }
     return maxCounts;
+  }
+
+  // 他タイプ重複強調: 有効参照値 = 他タイプmax - 同一カテゴリ合計 と要求数を比較
+  // 有効参照値 >= 要求数 → 緑実線(dup-full)、それ以外で他タイプ重複あり → 緑破線(dup-part)
+  // 他タイプ選択0件 → 強調なし。同一カテゴリ分は引き算（消費換算、自身含む）。
+  function applyDupToCard(card, recipe, catKey, perCat) {
+    const otherCats = Object.keys(state.categories).filter((k) => k !== catKey);
+    const sameMap = perCat[catKey] || {};
+    card.querySelectorAll(".ing-chip").forEach((chip) => {
+      const ing = recipe.ingredients.find((i) => i.name === chip.dataset.name);
+      if (!ing) {
+        chip.classList.remove("dup-full", "dup-part");
+        return;
+      }
+      let otherMax = 0;
+      for (const oc of otherCats) {
+        const v = (perCat[oc] && perCat[oc][ing.name]) || 0;
+        if (v > otherMax) otherMax = v;
+      }
+      if (otherMax === 0) {
+        chip.classList.remove("dup-full", "dup-part");
+        return;
+      }
+      const same = sameMap[ing.name] || 0;
+      const eff = otherMax - same;
+      if (eff >= ing.count) {
+        chip.classList.add("dup-full");
+        chip.classList.remove("dup-part");
+      } else {
+        // 重複さえしていれば(eff <= 0でも) dup-part
+        chip.classList.add("dup-part");
+        chip.classList.remove("dup-full");
+      }
+    });
   }
 
   function getOwnedRawCounts() {
@@ -614,6 +826,12 @@
       nameWrap.appendChild(catSpan);
       item.appendChild(nameWrap);
       const btnWrap = el("span", "mult-btns");
+      const b0 = el("button", "mult-btn close-btn", "×");
+      b0.type = "button";
+      b0.setAttribute("aria-label", recipe.name + "の選択を解除");
+      b0.title = "選択を解除";
+      b0.addEventListener("click", () => deselectRecipe(key));
+      btnWrap.appendChild(b0);
       [1, 2, 3].forEach((m) => {
         const b = el("button", "mult-btn" + (mult === m ? " on" : ""), "×" + m);
         b.type = "button";
@@ -630,12 +848,28 @@
     // 集計チップ（同一カテゴリ内は合計・カテゴリ間は最大値 × 倍率）
     const chipsWrap = el("div", "ings");
     chipsWrap.style.marginTop = "10px";
+    // タイプ共通強調: 選択中レシピの属するタイプ数で数える（個数・倍率は無視、有無のみ）
+    const typeSets = {};
+    for (const [key] of state.selected) {
+      const [cat, idxStr] = key.split(":");
+      const idx = parseInt(idxStr, 10);
+      const recipe = state.categories[cat] && state.categories[cat].recipes[idx];
+      if (!recipe) continue;
+      for (const ing of recipe.ingredients) {
+        if (!typeSets[ing.name]) typeSets[ing.name] = new Set();
+        typeSets[ing.name].add(cat);
+      }
+    }
     let totalTypes = 0;
     for (const name of state.ingredients) {
       const qty = maxCounts[name];
       if (qty == null) continue;
       totalTypes++;
-      const chip = el("span", "ing-chip", abbr(name) + " ×" + qty);
+      const typeCount = typeSets[name] ? typeSets[name].size : 0;
+      let cls = "ing-chip";
+      if (typeCount >= 3) cls += " hl";
+      else if (typeCount === 2) cls += " ok";
+      const chip = el("span", cls, abbr(name) + " ×" + qty);
       chipsWrap.appendChild(chip);
     }
     els.selectedSummary.appendChild(chipsWrap);
@@ -649,7 +883,7 @@
   function resetCard(card) {
     card.classList.remove("creatable");
     card.querySelectorAll(".ing-chip").forEach((chip) => {
-      chip.classList.remove("ok", "miss");
+      chip.classList.remove("ok", "miss", "dup-full", "dup-part");
     });
     const badge = card.querySelector(".servings-badge");
     if (badge) {
@@ -696,10 +930,12 @@
     for (const key of Object.keys(state.categories)) {
       const recipes = state.categories[key].recipes;
       let n = 0;
+      const perCat = getPerCatTotals();
       els.recipes.querySelectorAll('.recipe-card[data-cat="' + key + '"]').forEach((card) => {
         const recipe = recipes[+card.dataset.ridx];
         if (!hasInput) {
           resetCard(card);
+          applyDupToCard(card, recipe, key, perCat);
           return;
         }
 
@@ -714,6 +950,7 @@
             chip.classList.toggle("ok", ok);
             chip.classList.toggle("miss", !ok);
           });
+          applyDupToCard(card, recipe, key, perCat);
           const badge = card.querySelector(".servings-badge");
           if (badge) {
             const servings = calcServings(recipe, base);
@@ -739,6 +976,7 @@
             chip.classList.toggle("ok", ok);
             chip.classList.toggle("miss", !ok);
           });
+          applyDupToCard(card, recipe, key, perCat);
           const badge = card.querySelector(".servings-badge");
           if (badge) {
             badge.hidden = true;
@@ -751,6 +989,8 @@
     }
     // 残り表示は常に最新化（個数入力変更時にも反映）
     renderReserveSection();
+    // 入力は常時永続化（タブ破棄→復帰時の内容リセット防止）
+    scheduleSave();
   }
 
   function switchPane() {
@@ -796,6 +1036,15 @@
     });
   }
 
+  if (els.toggleLow) {
+    els.toggleLow.addEventListener("click", () => {
+      state.hideLow = !state.hideLow;
+      updateLowFilterButton();
+      applyLowFilter();
+      scheduleSave();
+    });
+  }
+
   // OCR: 数量一括入力
   function setCountsFromOCR(counts) {
     const inputs = els.counts.querySelectorAll("input");
@@ -810,6 +1059,23 @@
   (function initOCR() {
     if (!els.ocrBtn || !els.ocrModal) return;
     let selectedFile = null;
+    // プレビュー用 blob URL（iOS のメモリ圧迫対策として明示的に管理する）
+    let thumbUrl = null;
+
+    function revokeThumbUrl() {
+      if (thumbUrl) {
+        try { URL.revokeObjectURL(thumbUrl); } catch (e) {}
+        thumbUrl = null;
+      }
+    }
+
+    function clearThumb() {
+      revokeThumbUrl();
+      if (els.ocrThumb) {
+        try { els.ocrThumb.removeAttribute("src"); } catch (e) {}
+        els.ocrThumb.onload = null;
+      }
+    }
 
     function openModal() {
       els.ocrModal.hidden = false;
@@ -820,13 +1086,16 @@
       els.ocrModal.hidden = true;
       els.ocrModal.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
-      // 進捗リセット（ファイル選択は保持しない）
-      if (els.ocrRun.disabled === false && els.ocrProgress.hidden) {
-        // idle時のみクリア
+      // 大きな画像データを保持し続けない（バックグラウンド化時のメモリ圧迫対策）
+      selectedFile = null;
+      revokeThumbUrl();
+      if (els.ocrThumb) {
+        try { els.ocrThumb.removeAttribute("src"); } catch (e) {}
       }
     }
     function resetOCRState() {
       selectedFile = null;
+      clearThumb();
       if (els.ocrFile) els.ocrFile.value = "";
       if (els.ocrPreview) els.ocrPreview.hidden = true;
       if (els.ocrRun) els.ocrRun.disabled = true;
@@ -846,10 +1115,15 @@
       }
       selectedFile = file;
       if (els.ocrPreview) {
+        revokeThumbUrl();
         const url = URL.createObjectURL(file);
+        thumbUrl = url;
         if (els.ocrThumb) {
           els.ocrThumb.src = url;
-          els.ocrThumb.onload = () => URL.revokeObjectURL(url);
+          els.ocrThumb.onload = () => {
+            if (thumbUrl === url) thumbUrl = null;
+            try { URL.revokeObjectURL(url); } catch (e) {}
+          };
         }
         if (els.ocrFilename) els.ocrFilename.textContent = file.name + " (" + Math.round(file.size / 1024) + "KB)";
         els.ocrPreview.hidden = false;
@@ -968,6 +1242,60 @@
       });
     }
   })();
+
+  function buildRecipesExportMeta() {
+    var lvMult = formatLevelMult(state.level);
+    var lvTxt = "Lv" + state.level + (lvMult ? "(" + lvMult + ")" : "");
+    var dt = new Date().toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    return lvTxt + "  \u00b7  FB" + state.fb + "%  \u00b7  " + dt + " 出力";
+  }
+
+  function setRecipesExportStatus(msg, kind) {
+    if (!els.exportStatus) return;
+    if (!msg) {
+      els.exportStatus.hidden = true;
+      els.exportStatus.textContent = "";
+      els.exportStatus.className = "export-status";
+      return;
+    }
+    els.exportStatus.hidden = false;
+    els.exportStatus.textContent = msg;
+    els.exportStatus.className = "export-status " + (kind || "");
+  }
+
+  if (els.exportBtn) {
+    els.exportBtn.addEventListener("click", async function () {
+      if (state.selected.size === 0) {
+        setRecipesExportStatus("レシピにチェックを入れてから実行してください（選択中のレシピが0件です）", "err");
+        if (els.exportStatus && els.exportStatus.scrollIntoView) {
+          els.exportStatus.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+        return;
+      }
+      var orig = els.exportBtn.textContent;
+      els.exportBtn.disabled = true;
+      els.exportBtn.textContent = "生成中...";
+      setRecipesExportStatus("画像を生成しています...", "ok");
+      try {
+        var filename = "pokemonsleep_recipes_" + (window.PokemonExport ? window.PokemonExport.timestampStr() : new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)) + ".png";
+        var title = "ポケモンスリープ レシピ食材チェッカー（" + state.selected.size + "件選択）";
+        var subtitle = "チェックを入れたレシピのみを抽出";
+        var meta = buildRecipesExportMeta();
+        if (window.PokemonExport && window.PokemonExport.exportElement) {
+          var result = await window.PokemonExport.exportElement("recipes", { title: title, subtitle: subtitle, metaText: meta, filename: filename });
+          if (result && result.method === "preview") setRecipesExportStatus("画像を表示しました。長押しで保存、または「共有する」をお使いください", "ok");
+          else setRecipesExportStatus("画像を保存しました: " + filename, "ok");
+        } else {
+          throw new Error("エクスポート機能の読み込みに失敗しました");
+        }
+      } catch (e) {
+        setRecipesExportStatus(e.message || String(e), "err");
+      } finally {
+        els.exportBtn.textContent = orig;
+        els.exportBtn.disabled = false;
+      }
+    });
+  }
 
   loadData().catch((err) => {
     els.recipes.innerHTML = '<div class="loading">データの読み込みに失敗しました: ' + err.message + "</div>";
